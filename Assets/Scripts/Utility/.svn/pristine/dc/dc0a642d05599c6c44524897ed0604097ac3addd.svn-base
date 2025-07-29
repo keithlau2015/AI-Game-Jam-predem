@@ -1,0 +1,207 @@
+using Cysharp.Threading.Tasks;
+using GameUI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using GameDataStructure;
+
+public class GameManager : Singleton<GameManager>
+{
+    private const int TOTAL_SYS_USE = 14;
+
+    #region Global Variable
+    public static readonly bool isSinglePlayer = true;
+    public static readonly bool isOfflinePlayable = true;
+    #endregion
+
+    protected async void Start()
+    {
+        //Set Loading Config(Show Total Progress & Sub Progress)
+        LoadingManager.singleton.Show(true, TOTAL_SYS_USE);
+
+        //Start up procedure
+        #region Load Local DS
+        //Step 1: Load all local config
+        //1 - Localization System Set Up
+        List<LocalizationDS> localizationConfigList = await FIOSystem.LoadEncryptedCSV<LocalizationDS>();
+        IProgress<int> localizationProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Localization...", localizationConfigList.Count);
+        await LocalizationManager.singleton.SetUp(localizationProgress, localizationConfigList, (int)LocalizationDS.Language.tw);
+
+        //2 - Rarity System Set Up
+        List<RarityDS> rarityConfigList = await FIOSystem.LoadEncryptedCSV<RarityDS>();
+        IProgress<int> rarityProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Rarity System...", rarityConfigList.Count);
+        await RaritySystem.singleton.SetUp(rarityProgress, rarityConfigList);
+
+        //3 - Attribute System Set Up
+        List<AttributeDS> attributeDSList = await FIOSystem.LoadEncryptedCSV<AttributeDS>();
+        List<GrowingDS> growingDSList = await FIOSystem.LoadEncryptedCSV<GrowingDS>();
+        IProgress<int> attributeProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Attribute System...", attributeDSList.Count);
+        await AttributeManager.singleton.SetUp(attributeProgress, attributeDSList, growingDSList, new List<AttributeInstance>() { });
+
+        //4 - Quest System Set Up
+        List<QuestDS> questDSList = await FIOSystem.LoadEncryptedCSV<QuestDS>();
+        List<QuestChapterDS> questChapterDSList = await FIOSystem.LoadEncryptedCSV<QuestChapterDS>();
+        List<QuestHistroy> questHistroyList = await FIOSystem.LoadFile<QuestHistroy>();
+        List<QuestChapterHistroy> questChapterHistroyList = await FIOSystem.LoadFile<QuestChapterHistroy>();
+        IProgress<int> questProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Quest System...", questDSList.Count + questChapterDSList.Count);
+        await QuestManager.singleton.SetUp(questProgress, questChapterDSList, questDSList, questChapterHistroyList, questHistroyList);
+
+        //5 - Skin System Set Up
+        List<SkinDS> skinDSList = await FIOSystem.LoadEncryptedCSV<SkinDS>();
+        List<SkinInstance> skinInsList = await FIOSystem.LoadFile<SkinInstance>();
+        IProgress<int> skinProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Skin System...", skinDSList.Count);
+        await SkinManager.singleton.SetUp(skinProgress, skinDSList, skinInsList);
+
+        //6 - Character System Set Up
+        List<CharacterDS> characterDSList = await FIOSystem.LoadEncryptedCSV<CharacterDS>();
+        List<CharacterInstance> characterInstanceList = await FIOSystem.LoadFile<CharacterInstance>();
+        IProgress<int> characterProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Character System...", characterDSList.Count);
+        await CharacterManager.singleton.SetUp(characterProgress, characterDSList, characterInstanceList);
+
+        //7 - Item System Set Up
+        List<ItemDS> itemDSList = await FIOSystem.LoadEncryptedCSV<ItemDS>();
+        List<ItemInstance> itemInstanceList = await FIOSystem.LoadFile<ItemInstance>();
+        IProgress<int> itemProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Item System...", itemDSList.Count);
+        await ItemManager.singleton.SetUp(itemProgress, itemDSList, itemInstanceList);
+
+        //8 - Inventory System Set Up
+        List<InventoryDS> inventoryDSList = await FIOSystem.LoadFile<InventoryDS>();
+        List<InventoryInstance> inventoryInsList = await FIOSystem.LoadFile<InventoryInstance>();
+        IProgress<int> inventoryProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Inventory System...", 0);
+        await InventoryManager.singleton.SetUp(inventoryProgress, inventoryDSList, inventoryInsList);
+
+        //9 - Account System Set Up
+        List<AccountInstance> accountInstanceList = await FIOSystem.LoadFile<AccountInstance>($"ACC", FIOSystem.FileType.Player);
+        IProgress<int> accountProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Account System...", accountInstanceList.Count);
+        await AccountManager.singleton.SetUp(accountProgress, accountInstanceList);
+
+        //10 - Object Pooling System Set Up
+        List<EntityDS> objectConfigList = await FIOSystem.LoadEncryptedCSV<EntityDS>();
+        List<EntityInstance> objectInstanceList = await FIOSystem.LoadFile<EntityInstance>($"ENETITIES", FIOSystem.FileType.Player);
+        IProgress<int> objectPoolProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Object Pooling System...", objectConfigList.Count + objectInstanceList.Count);
+        await ObjectPoolManager.singleton.SetUp(objectPoolProgress, objectConfigList, objectInstanceList);
+
+        //11 - Input Manager Set Up
+        List<InputManager.InputSetting> inputSettingList = await FIOSystem.LoadFile<InputManager.InputSetting>("InputPref", FIOSystem.FileType.Player);
+        IProgress<int> inputProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Input System...", 1);
+        await InputManager.singleton.SetUp(inputProgress, inputSettingList);
+
+        //12 - Newbie System Set Up
+        List<NewbieDS> NewbieDSList = await FIOSystem.LoadEncryptedCSV<NewbieDS>();
+        IProgress<int> newbieProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Newbie System...", NewbieDSList.Count);
+        await NewbieManager.singleton.SetUp(newbieProgress, NewbieDSList);
+
+        //13 - Random Name System Set Up
+        List<RandomNameDS> RandomNameDSList = await FIOSystem.LoadEncryptedCSV<RandomNameDS>();
+        IProgress<int> randNameProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowProgress, "Setting Up Random Name System...", RandomNameDSList.Count);
+        await RandomNameManager.singleton.SetUp(randNameProgress, RandomNameDSList);
+        #endregion
+
+#if STANDARD_FLOW
+        //Login Panel UI
+        IProgress<int> loginPanelUIProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowPercentage, "Loading Login Panel...", 1);
+        LandingPanel loginPanel = await UIManager.singleton.LoadUI<LandingPanel>(typeof(LandingPanel).Name);
+        loginPanelUIProgress.Report(1);
+        LoadingManager.singleton.Hide();
+#elif GAME_MECHANIC_FLOW
+        IProgress<int> loadSceneProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowPercentage, "Loading Battle Scene...", 1);
+        await SceneManager.LoadSceneAsync(2);
+        loadSceneProgress.Report(1);
+        LoadingManager.singleton.Hide();
+#endif
+    }
+
+    public static async UniTaskVoid ExitGame()
+    {
+
+    }
+
+    public static async void SaveAll()
+    {
+
+    }
+
+    public static void DestoryAllChild(GameObject root)
+    {
+        if (root == null)
+            return;
+        for (int i = 0; i < root.transform.childCount; i++)
+        {
+            Destroy(root.transform.GetChild(i).gameObject);
+        }
+    }
+
+    public static async void SwitchScene(int sceneIndex)
+    {
+        if(!LoadingManager.singleton.isLoading)
+            //Show Loading UI
+            LoadingManager.singleton.Show(false, 1);
+
+        //Clear UI
+        UIManager.singleton.ClearAllUI();
+        //Load to Scene
+        IProgress<int> loadSceneProgress = await LoadingManager.singleton.AddTask(LoadingManager.PresentType.ShowPercentage, "Loading...", 100);
+        await SceneManager.LoadSceneAsync(sceneIndex).ToUniTask(Cysharp.Threading.Tasks.Progress.Create<float>(x => {
+            loadSceneProgress.Report((int)(x * 100f));
+        }));
+
+        if (!LoadingManager.singleton.isLoading)
+            //Hide Loading UI
+            LoadingManager.singleton.Hide();
+    }
+
+#if UNITY_EDITOR
+    private static readonly string STANDARD_FLOW = "STANDARD_FLOW";
+    private static readonly string GAME_MECHANIC_FLOW = "GAME_MECHANIC_FLOW";
+
+    [MenuItem("NullPointInteractive/GameFlow/Standard")]
+    public static void StandardGameFlow()
+    {
+        AddDefinition(STANDARD_FLOW);
+        RemoveDefinition(GAME_MECHANIC_FLOW);
+    }
+    
+    [MenuItem("NullPointInteractive/GameFlow/GameMechanicTest")]
+    public static void GameMechanicTestGameFlow()
+    {
+        AddDefinition(GAME_MECHANIC_FLOW);
+        RemoveDefinition(STANDARD_FLOW);
+    }
+
+    private static void AddDefinition(string definition)
+    {
+        var group = EditorUserBuildSettings.selectedBuildTargetGroup;
+        var definitions = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+        PlayerSettings.SetScriptingDefineSymbolsForGroup(group, definitions + ";" + definition);
+    }
+
+    private static void RemoveDefinition(string definition)
+    {
+        var group = EditorUserBuildSettings.selectedBuildTargetGroup;
+        var definitions = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+        var splited = definitions.Split(';');
+
+        var builder = new StringBuilder();
+
+        var addedCount = 0;
+        foreach (var item in splited)
+        {
+            if (item == definition)
+                continue;
+
+            builder.Append(item);
+            builder.Append(';');
+            addedCount++;
+        }
+
+        if (addedCount != 0)
+            builder.Remove(builder.Length - 1, 1);
+
+        PlayerSettings.SetScriptingDefineSymbolsForGroup(group, builder.ToString());
+    }
+#endif
+}

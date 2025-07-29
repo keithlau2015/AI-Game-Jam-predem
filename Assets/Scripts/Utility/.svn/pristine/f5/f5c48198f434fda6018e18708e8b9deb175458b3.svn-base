@@ -1,0 +1,145 @@
+using DG.Tweening;
+using System;
+using UnityEngine;
+
+public abstract class GUITweenerBase<T> : MonoBehaviour
+{
+    [SerializeField]
+    protected bool playWhenOnEnable;
+    [SerializeField]
+    protected bool playWhenOnAwake;
+    [SerializeField]
+    private LoopType loopType;
+    [Tooltip("-1 => loop infinitely")]
+    [SerializeField]
+    private int loop = -1;
+    [SerializeField]
+    protected float duration;
+    [SerializeField]
+    protected float speed;
+    [SerializeField]
+    protected float delay;
+    [SerializeField]
+    protected T from;
+    [SerializeField]
+    protected T to;
+    [SerializeField]
+    protected AnimationCurve animationCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
+
+    protected Action onPlayCB;
+    protected Action onCompleteCB;
+    protected bool isInit = false;
+    protected TweenParams tweenParams = new TweenParams();
+    protected Tweener tweener;    
+
+    public virtual void Play()
+    {
+        tweener.Play();
+    }
+
+    public virtual void Stop()
+    {
+        tweener.Restart();
+        tweener.TogglePause();
+    }
+
+    public virtual void SetUp(Tweener tweener, Action onPlayCB = null, Action onCompleteCB = null)
+    {
+        this.tweener = tweener;
+        this.onPlayCB = onPlayCB;
+        this.onCompleteCB = onCompleteCB;
+        SetConfig();
+        isInit = true;
+    }
+
+    public void SetTween(T from = default, T to = default)
+    {
+        this.to = to;
+        this.from = from;
+        SetConfig();
+    }
+
+    public void SetOnPlayCB(Action onPlayCB)
+    {
+        this.onPlayCB = onPlayCB;
+        SetConfig();
+    }
+
+    public void SetOnCompleteCB(Action onCompleteCB)
+    {
+        this.onCompleteCB = onCompleteCB;
+        SetConfig();
+    }
+
+    public void ClearOnPlayCB()
+    {
+        this.onPlayCB = null;
+        SetConfig();
+    }
+
+    public void ClearOnCompleteCB()
+    {
+        this.onCompleteCB = null;
+        SetConfig();
+    }
+
+    public void SetLoop(int loop, LoopType loopType)
+    {
+        this.loop = loop;
+        this.loopType = loopType;
+        SetConfig();
+    }
+
+    public void SetDelay(float delay)
+    {
+        this.delay = delay;
+        SetConfig();
+    }
+
+    private void SetConfig()
+    {
+        this.tweenParams.SetLoops(loop, loopType);
+        this.tweenParams.SetEase(animationCurve);
+        this.tweenParams.OnPlay(() => onPlayCB?.Invoke());
+        this.tweenParams.OnComplete(() => onCompleteCB?.Invoke());
+        this.tweenParams.SetDelay(delay);
+        this.tweenParams.SetAutoKill(false);
+        if(tweener != null)
+        {
+            this.tweener.SetAs(tweenParams);
+            if (from != null)
+                this.tweener.ChangeStartValue(from);
+            if (to != null)
+                this.tweener.ChangeEndValue(to);
+            this.tweener.TogglePause();
+        }
+    }
+
+    protected virtual void Awake()
+    {
+        if(playWhenOnAwake && isInit)
+        {
+            tweener.Play();
+        }
+    }
+
+    protected virtual void OnEnable()
+    {
+        if (playWhenOnEnable && isInit)
+        {
+            tweener.Play();
+        }
+    }
+
+    protected virtual void OnDisable()
+    {
+        tweener.TogglePause();
+        tweener.From();
+    }
+
+    protected virtual void OnDestroy()
+    {
+        tweener.TogglePause();
+        tweener.From();
+    }
+}

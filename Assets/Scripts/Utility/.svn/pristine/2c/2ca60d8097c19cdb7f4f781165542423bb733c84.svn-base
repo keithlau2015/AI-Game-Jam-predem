@@ -1,0 +1,570 @@
+﻿using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using UnityEngine;
+
+public static class FIOSystem
+{
+    private readonly static string key = "57_dQ0<fd~1dCMNfjc8_dp09m>kiytT0";
+    private readonly static byte[] keyArray = UTF8Encoding.UTF8.GetBytes(key);
+    private readonly static string iv = "a_03Mkd<[~sDtC02";
+    private readonly static byte[] ivArray = UTF8Encoding.UTF8.GetBytes(iv);
+
+    private static readonly string[] SizeSuffixes = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+
+    public static event Action onFinishSaveObj;
+
+    public enum FileType : int
+    {
+        none = -1,
+        Resources = 0,
+        Player = 1,
+    }
+
+    public static string[] filePath { get; private set; } = new string[3];
+    public static string[] fileExtension { get; private set; } = new string[3];
+    public static bool isInit { get; private set; } = false;
+
+    private static RijndaelManaged rijndaelManaged;
+
+    public static void Init()
+    {
+        filePath[0] = $"{Application.dataPath}/Resources/";
+        filePath[1] = $"{Application.persistentDataPath}/Player/";
+
+        fileExtension[0] = ".res";
+        fileExtension[1] = ".player";
+
+        rijndaelManaged = new RijndaelManaged();
+        rijndaelManaged.Key = keyArray;
+        rijndaelManaged.IV = ivArray;
+
+        #region Type Converter
+        #region Tuple 2
+        TypeDescriptor.AddAttributes(typeof((System.Int32, System.Int32)), new TypeConverterAttribute(typeof(TupleConverter.TwoParam<System.Int32, System.Int32>)));
+        TypeDescriptor.AddAttributes(typeof((System.Int64, System.Int64)), new TypeConverterAttribute(typeof(TupleConverter.TwoParam<System.Int64, System.Int64>)));
+        #endregion
+
+        #region Tuple 3
+        TypeDescriptor.AddAttributes(typeof((System.Int32, System.Int32, System.Int32)), new TypeConverterAttribute(typeof(TupleConverter.ThreeParam<System.Int32, System.Int32, System.Int32>)));
+        TypeDescriptor.AddAttributes(typeof((System.Int64, System.Int64, System.Int64)), new TypeConverterAttribute(typeof(TupleConverter.ThreeParam<System.Int64, System.Int64, System.Int64>)));
+        #endregion
+        #endregion
+
+        isInit = true;
+    }
+
+    public static async void CreateFile(string fileName, FileType fileType, string content = null)
+    {
+        if (!isInit)
+            Init();
+
+        string[] contents = new string[1];
+        contents[0] = content;
+        await WriteFile(fileType, fileName, contents);
+    }
+
+    public static bool CheckFileIsExits(string fileName, FileType fileType)
+    {
+        return File.Exists($"{filePath[(int)fileType]}{fileName}{fileExtension[(int)fileType]}");
+    }
+
+    public static string[] GetAllFileInDirectory(string path, string[] excludeExtension = null)
+    {
+        if (!Directory.Exists(path))
+            return null;
+        DirectoryInfo directoryInfo = new DirectoryInfo(path);
+        FileInfo[] files = directoryInfo.GetFiles();
+        List<string> allFilesName = new List<string>();
+        foreach (FileInfo fileInfo in files)
+        {
+            bool isExclude = false;
+            if (excludeExtension != null)
+            {
+                foreach (string ext in excludeExtension)
+                {
+                    if (fileInfo.Extension.Equals(ext))
+                    {
+                        isExclude = true;
+                        break;
+                    }
+
+                }
+            }
+            if (isExclude)
+                continue;
+            allFilesName.Add(fileInfo.Name);
+        }
+        return allFilesName.ToArray();
+    }
+
+    public static async void Store<T>(T[] objs, FileType fileType, string fileName)
+    {
+        if (!isInit)
+            Init();
+
+        await WriteFile<T>(fileType, fileName, objs);
+    }
+
+    public static async void Store<T>(T obj, FileType fileType, string fileName)
+    {
+        if (!isInit)
+            Init();
+
+        if (obj == null)
+            return;
+
+        T[] objArray = { obj };
+        await WriteFile<T>(fileType, fileName, objArray);
+    }
+
+    private static async UniTask<bool> WriteFile<T>(FileType fileType, string fileName, T[] objs)
+    {
+        if (!isInit)
+            Init();
+
+        if (string.IsNullOrEmpty(fileName))
+            fileName = $"{typeof(T).Name}";
+
+        string path = filePath[(int)fileType];
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
+        using (FileStream fileStream = new FileStream($"{path}{fileName}{fileExtension[(int)fileType]}", FileMode.Create))
+        {            
+            try
+            {
+                var settings = new JsonSerializerSettings();
+                // This tells your serializer that multiple references are okay.
+                settings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                string json = JsonConvert.SerializeObject(objs, settings);
+                Debug.Log($"Save: {json}");
+                byte[] datas = await EncrpytStringToBytes(json, rijndaelManaged.Key, rijndaelManaged.IV);
+                await fileStream.WriteAsync(datas, 0, datas.Length);
+            }
+            catch (SerializationException exception)
+            {
+                Debug.Log("Save failed. Error: " + exception.Message);
+                return false;
+            }
+            finally
+            {
+                fileStream.Close();
+                onFinishSaveObj?.Invoke();
+            }
+            return true;
+        }
+    }
+
+    private static List<string> ConvertObjToString<T>(T[] objs)
+    {
+        List<string> result = new List<string>();
+        foreach (T obj in objs)
+        {
+            result.Add(obj.ToString());
+        }
+        return result;
+    }
+
+    private static void ConvertMultiObjsToBin<T>(Stream stream, T[] objs)
+    {
+        foreach (T obj in objs)
+        {
+            ConvertObjToBin(stream, obj);
+        }
+    }
+
+    private static void ConvertObjToBin<T>(Stream stream, T obj)
+    {
+        BinaryFormatter formatter = new BinaryFormatter();
+        try
+        {
+            formatter.Serialize(stream, obj);
+        }
+        catch (SerializationException exception)
+        {
+            Debug.Log("Save failed. Error: " + exception.Message);
+        }
+    }
+
+    public static async UniTask<List<T>> LoadFile<T>(string key = "", FileType fileType = FileType.Player)
+    {
+        if (!isInit)
+            Init();
+
+        string path = $"{filePath[(int)fileType]}{typeof(T).Name}{fileExtension[(int)fileType]}";
+
+        if (!string.IsNullOrEmpty(key))
+            path = $"{filePath[(int)fileType]}{key}{fileExtension[(int)fileType]}";
+
+        if (!File.Exists(path))
+        {
+            Debug.LogWarning($"FIOSystem Load: the path is not exists {path}");
+            return new List<T>();
+        }
+
+        List<T> returnValue = new List<T>();
+        try
+        {
+            byte[] rawMeta = File.ReadAllBytes(path);
+            if (rawMeta == null || rawMeta.Length <= 0)
+                return new List<T>();
+            string meta = await DecryptStringFromBytes(rawMeta, rijndaelManaged.Key, rijndaelManaged.IV);
+            Debug.Log($"meta: {meta}");
+            returnValue = JsonConvert.DeserializeObject<List<T>>(meta);
+        }
+        catch (SerializationException exception)
+        {
+            if (exception != null)
+                Debug.Log("Save System Exception Catach!!\n" +
+                    "Exception Source: " + exception.Source + "\n" +
+                    "Exception Message: " + exception.Message);
+
+            return returnValue;
+        }
+        finally
+        {
+
+        }
+
+        return returnValue;
+    }
+
+    public static async UniTask<bool> StoreCSV<T>(string fileName, T[] objs)
+    {
+        if (!isInit)
+            Init();
+
+        string rawData = "";
+        PropertyInfo[] propertyInfos = typeof(T).GetProperties();
+        foreach (PropertyInfo propertyInfo in propertyInfos)
+        {
+            if (rawData.Length != 0)
+                rawData += ",";
+            rawData += propertyInfo.Name;
+        }
+        rawData += "\n";
+        foreach (T obj in objs)
+        {
+            bool isFirst = true;
+            foreach (PropertyInfo propertyInfo in propertyInfos)
+            {
+                if (isFirst)
+                    isFirst = false;
+                else
+                    rawData += ",";
+
+                rawData += propertyInfo.GetValue(obj).ToString();
+            }
+            rawData += "\n";
+        }
+
+        string path = filePath[(int)FileType.Resources] + "/LocalConfig/";
+        string fileExt = fileExtension[(int)FileType.Resources];
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
+        using (FileStream fileStream = new FileStream(path + fileName + fileExt, FileMode.Create))
+        {
+            try
+            {
+                byte[] datas = await EncrpytStringToBytes(rawData, rijndaelManaged.Key, rijndaelManaged.IV);
+                await fileStream.WriteAsync(datas, 0, datas.Length);
+            }
+            catch (SerializationException exception)
+            {
+                Debug.Log("Save failed. Error: " + exception.Message);
+                return false;
+            }
+            finally
+            {
+                fileStream.Close();
+                onFinishSaveObj?.Invoke();
+            }
+            return true;
+        }
+    }
+
+    public static async UniTask<bool> StoreCSV(string fileName, string csvData)
+    {
+        if (!isInit)
+            Init();
+
+        string path = filePath[(int)FileType.Resources] + "/LocalConfig/";
+        string fileExt = fileExtension[(int)FileType.Resources];
+
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
+        using (FileStream fileStream = new FileStream(path + fileName + fileExt, FileMode.Create))
+        {
+            try
+            {
+                byte[] datas = await EncrpytStringToBytes(csvData, rijndaelManaged.Key, rijndaelManaged.IV);
+                await fileStream.WriteAsync(datas, 0, datas.Length);
+            }
+            catch (SerializationException exception)
+            {
+                Debug.Log("Save failed. Error: " + exception.Message);
+                return false;
+            }
+            finally
+            {
+                fileStream.Close();
+                onFinishSaveObj?.Invoke();
+            }
+            return true;
+        }
+    }
+
+    public static async UniTask<List<T>> LoadEncryptedCSV<T>() where T : new()
+    {
+        if (!isInit)
+            Init();
+
+        List<T> result = new List<T>();
+        string path = $"{filePath[(int)FileType.Resources]}/LocalConfig/{typeof(T).Name}{fileExtension[(int)FileType.Resources]}";
+        
+        Regex extensionRX = new Regex(@"\.res");
+        if (path == string.Empty || !extensionRX.IsMatch(path))
+        {
+            Debug.LogError($"LoadEncryptedCSV: Invalid Args");
+            return result;
+        }
+        
+        string meta = "";
+        if (!File.Exists(path))
+        {
+            Debug.LogWarning($"LoadEncryptedCSV: the path is not exists {path}");
+            return new List<T>();
+        }
+
+        try
+        {
+            byte[] rawMeta = File.ReadAllBytes(path);
+            if (rawMeta == null || rawMeta.Length <= 0)
+                return new List<T>();
+            meta = await DecryptStringFromBytes(rawMeta, rijndaelManaged.Key, rijndaelManaged.IV);
+            //Debug.Log($"meta: {meta}");
+        }
+        catch (SerializationException exception)
+        {
+            if (exception != null)
+                Debug.Log("Save System Exception Catach!!\n" +
+                    "Exception Source: " + exception.Source + "\n" +
+                    "Exception Message: " + exception.Message);
+
+            return null;
+        }
+
+        List<string> fieldNameList = new List<string>();
+        string[] split = meta.Split('\n');
+        foreach (string line in split)
+        {
+            if (line == null || line.Length == 0 || line == "")
+                continue;
+
+            //Get raw data
+            var values = line.Split(',');
+
+            //if the first line
+            if (fieldNameList.Count == 0)
+                fieldNameList.AddRange(values);
+            else
+            {
+                T newObj = new T();
+                for (int i = 0; i < fieldNameList.Count; i++)
+                {
+                    PropertyInfo propertyInfo = newObj.GetType().GetProperty(fieldNameList[i]);
+                    if (propertyInfo == null)
+                    {
+                        Debug.LogError($"LoadEncryptedCSV: field not found[{fieldNameList[i]}]");
+                        return result;
+                    }
+                    propertyInfo.SetValue(newObj, Convert.ChangeType(values[i], propertyInfo.PropertyType));
+                }
+                result.Add(newObj);
+            }
+        }
+
+        return result;
+    }
+
+    public static string LoadCSV(string path)
+    {
+        string result = "";
+        
+        Regex extensionRX = new Regex(@"\.csv$");
+        if (path == string.Empty || !extensionRX.IsMatch(path))
+        {
+            Debug.LogError($"LoadCSV: Invalid Args");
+            return result;
+        }
+
+        using (StreamReader streamReader = new StreamReader(path))
+        {
+            while (!streamReader.EndOfStream)
+            {
+                result += streamReader.ReadLine();
+                result += "\n";
+            }
+        }
+
+        return result;
+    }
+
+    /*
+    public static async UniTask<List<T>> LoadAllFile<T>(string directoryPath = "")
+    {
+        if (!isInit)
+            Init();
+
+        string[] filesName = GetAllFileInDirectory(directoryPath);
+        if (filesName == null)
+        {
+            return null;
+        }
+        List<T> returnValue = new List<T>();
+        foreach (string name in filesName)
+        {
+            string[] fileNameSplit = name.Split('.');
+            if (fileNameSplit == null || fileNameSplit.Length == 0)
+                continue;
+
+            List<T> objs = await LoadFile<T>(fileNameSplit[0]);
+            if (objs != null)
+                returnValue.AddRange(objs);
+        }
+        return returnValue;
+    }
+    */
+
+    private static async UniTask<byte[]> EncrpytStringToBytes(string data, byte[] key, byte[] iv)
+    {
+        // Check arguments.
+        if (data == null || data.Length <= 0)
+            throw new ArgumentNullException("data");
+        if (key == null || key.Length <= 0)
+            throw new ArgumentNullException("Key");
+        if (iv == null || iv.Length <= 0)
+            throw new ArgumentNullException("IV");
+        byte[] encrypted;
+        // Create an RijndaelManaged object
+        // with the specified key and IV.
+        using (RijndaelManaged rijAlg = new RijndaelManaged())
+        {
+            rijAlg.Key = key;
+            rijAlg.IV = iv;
+
+            // Create an encryptor to perform the stream transform.
+            ICryptoTransform encryptor = rijAlg.CreateEncryptor(rijAlg.Key, rijAlg.IV);
+
+            // Create the streams used for encryption.
+            using (MemoryStream msEncrypt = new MemoryStream())
+            {
+                using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                {
+                    using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                    {
+
+                        //Write all data to the stream.
+                        await swEncrypt.WriteAsync(data);
+                    }
+                    encrypted = msEncrypt.ToArray();
+                }
+            }
+        }
+
+        // Return the encrypted bytes from the memory stream.
+        return encrypted;
+    }
+
+    private static async UniTask<string> DecryptStringFromBytes(byte[] meta, byte[] key, byte[] iv)
+    {
+        // Check arguments.
+        if (meta == null || meta.Length <= 0)
+        {
+            //throw new ArgumentNullException("cipherText");
+            return string.Empty;
+        }
+        if (key == null || key.Length <= 0)
+        {
+            //throw new ArgumentNullException("Key");
+            return string.Empty;
+        }
+        if (iv == null || iv.Length <= 0)
+        {
+            //throw new ArgumentNullException("IV");
+            return string.Empty;
+        }
+
+        // Declare the string used to hold
+        // the decrypted text.
+        string plaintext = null;
+
+        // Create an RijndaelManaged object
+        // with the specified key and IV.
+        using (RijndaelManaged rijAlg = new RijndaelManaged())
+        {
+            rijAlg.Key = key;
+            rijAlg.IV = iv;
+
+            // Create a decryptor to perform the stream transform.
+            ICryptoTransform decryptor = rijAlg.CreateDecryptor(rijAlg.Key, rijAlg.IV);
+
+            // Create the streams used for decryption.
+            using (MemoryStream msDecrypt = new MemoryStream(meta))
+            {
+                using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                {
+                    using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                    {
+                        // Read the decrypted bytes from the decrypting stream
+                        // and place them in a string.
+                        plaintext = await srDecrypt.ReadToEndAsync();
+                    }
+                }
+            }
+        }
+
+        return plaintext;
+    }
+
+    public static string SizeSuffix(Int64 value, int decimalPlaces = 1)
+    {
+        if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
+        if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); }
+        if (value == 0) { return string.Format("{0:n" + decimalPlaces + "} bytes", 0); }
+
+        // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
+        int mag = (int)Math.Log(value, 1024);
+
+        // 1L << (mag * 10) == 2 ^ (10 * mag) 
+        // [i.e. the number of bytes in the unit corresponding to mag]
+        decimal adjustedSize = (decimal)value / (1L << (mag * 10));
+
+        // make adjustment when the value is large enough that
+        // it would round up to 1000 or more
+        if (Math.Round(adjustedSize, decimalPlaces) >= 1000)
+        {
+            mag += 1;
+            adjustedSize /= 1024;
+        }
+
+        return string.Format("{0:n" + decimalPlaces + "} {1}",
+            adjustedSize,
+            SizeSuffixes[mag]);
+    }
+}

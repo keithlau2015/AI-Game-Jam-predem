@@ -1,0 +1,24 @@
+using Cysharp.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+
+public class GameAssetsBundleManager : Singleton<GameAssetsBundleManager>
+{
+    public static async UniTask<Sprite> LoadSprite(string key)
+    {
+        AsyncOperationHandle<Sprite> loadOp = Addressables.LoadAssetAsync<Sprite>(key);
+        await loadOp;
+        if (loadOp.Status == AsyncOperationStatus.Succeeded)
+        {
+            Sprite sprite = loadOp.Result;
+            Addressables.Release(loadOp);
+            return sprite;
+        }
+        else
+        {
+            Addressables.Release(loadOp);
+            return null;
+        }
+    }
+}

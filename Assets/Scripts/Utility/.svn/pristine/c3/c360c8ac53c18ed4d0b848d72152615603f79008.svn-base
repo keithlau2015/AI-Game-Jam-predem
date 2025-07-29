@@ -1,0 +1,20 @@
+using DG.Tweening;
+using UnityEngine;
+
+[ExecuteInEditMode]
+public class GUITweener_Scale : GUITweenerBase<Vector3>
+{
+    protected override void Awake()
+    {
+        if(!isInit)
+            base.SetUp(DOTween.To(() => this.transform.localScale, x => this.transform.localScale = x, to, duration));
+        base.Awake();
+    }
+
+    protected override void OnEnable()
+    {
+        if(!isInit)
+            base.SetUp(DOTween.To(() => this.transform.localScale, x => this.transform.localScale = x, to, duration));
+        base.OnEnable();
+    }
+}

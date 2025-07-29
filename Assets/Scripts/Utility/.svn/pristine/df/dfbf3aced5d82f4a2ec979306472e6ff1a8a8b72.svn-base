@@ -1,0 +1,53 @@
+using System;
+
+public class SlotInstance
+{
+    public enum Owner : int
+    {
+        Inventory = 0,
+        Character = 1,
+        Item = 2,
+        Equipment = 3,
+    }
+
+    public string UID { get; protected set; }
+    public int OwnerType { get; protected set; }
+    public string OwnerUID { get; protected set; }
+    public object obj { get; protected set; }
+    public bool IsLocked { get; protected set; }
+    public long CreateTime { get; protected set; }
+    public SlotInstance(int ownerType, string ownerUID, bool isLock)
+    {
+        this.UID = Guid.NewGuid().ToString();
+        this.OwnerType = ownerType;
+        this.OwnerUID = ownerUID;
+        this.IsLocked = isLock;
+        this.CreateTime = TimeManager.singleton.GetCurrentUnixtimestamp();
+    }
+
+    public virtual object Insert(object obj)
+    {
+        if (IsLocked)
+            return null;
+
+        object originObj = this.obj;
+        this.obj = obj;
+
+        return originObj;
+    }
+
+    public virtual void Unlock()
+    {
+        this.IsLocked = false;
+    }
+
+    public virtual void Lock()
+    {
+        this.IsLocked = true;
+    }
+
+    public virtual bool IsEmpty()
+    {
+        return obj == null;
+    }
+}

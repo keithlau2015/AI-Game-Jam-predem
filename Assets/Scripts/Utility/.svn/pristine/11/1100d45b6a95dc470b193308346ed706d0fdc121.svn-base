@@ -1,0 +1,44 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class CursorManager : Singleton<CursorManager>
+{
+    private Color cursorColor;
+    private Texture2D cursorTexture;
+    private Vector2 hotSpot = Vector2.zero;
+
+    public void Init()
+    {
+        if (cursorTexture != null)
+            Cursor.SetCursor(cursorTexture, Vector2.zero, CursorMode.Auto);
+        WindowMode();
+    }
+
+    public void ResetCursor()
+    {
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+    }
+
+    public void SetVisible(bool visible)
+    {
+        Cursor.visible = visible;
+    }
+
+    public void SetLockMode(CursorLockMode cursorLockMode)
+    {
+        Cursor.lockState = cursorLockMode;
+    }
+
+    public void FPSMode()
+    {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    public void WindowMode()
+    {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
+}

@@ -1,0 +1,20 @@
+public static class ErrorCode
+{
+    public static readonly int AssetsRegisterPanelNotFound              = 0;
+    public static readonly int RegisterFailed_IDDuplicated              = 100;
+    public static readonly int RegisterFailed_IDInvalidFormat           = 101;
+    public static readonly int RegisterFailed_EmptyID                   = 102;
+    public static readonly int RegisterFailed_NicknameInvaildFormat     = 103;
+    public static readonly int RegisterFailed_EmptyNickname             = 104;
+    public static readonly int RegisterFailed_PWInvaildFormat           = 105;
+    public static readonly int RegisterFailed_EmptyPW                   = 106;
+
+    public static readonly int BugReportFailed_SummaryEmpty             = 200;
+
+    public static readonly int InvaildQuestChapterType                  = 10001;
+
+    public static readonly int InvalidRecipeDSID                        = 50000;
+    public static readonly int RecipeNotPermanent                       = 50001;
+    public static readonly int RecipeNotFulfilItemID                    = 50002;
+    public static readonly int RecipeNotFulfilItemCount                 = 50003;
+}

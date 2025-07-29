@@ -1,0 +1,17 @@
+using DG.Tweening;
+using UnityEngine;
+
+[ExecuteInEditMode]
+public class GUITweener_Alpha : GUITweenerBase<float>
+{
+    [SerializeField]
+    private CanvasGroup canvasGroup;
+
+    protected override void Awake()
+    {
+        if (canvasGroup == null)
+            TryGetComponent(out canvasGroup);
+        base.SetUp(DOTween.To(() => canvasGroup.alpha, x => canvasGroup.alpha = x, to, duration));
+        base.Awake();
+    }
+}

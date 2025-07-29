@@ -1,0 +1,35 @@
+using System;
+using EPOOutline;
+using UnityEngine;
+
+[RequireComponent(typeof(Collider))]
+public class HoverDescription : MonoBehaviour
+{
+    public string localizationKey;
+    public event Action onSelect;
+    private Outlinable outline;
+
+    private void Awake()
+    {
+        TryGetComponent(out outline);
+    }
+
+    public void OnHover()
+    {
+        if(outline)
+            outline.enabled = true;
+        UIManager.singleton.ShowLiteDescription(true, localizationKey);
+    }
+
+    public void OnHoverOut()
+    {
+        if(outline)
+            outline.enabled = false;
+        UIManager.singleton.ShowLiteDescription(false);
+    }
+
+    public void OnSelect()
+    {
+        onSelect?.Invoke();
+    }
+}

@@ -1,0 +1,114 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using UnityEditor;
+using UnityEngine;
+
+namespace DevTools
+{
+    public class EncryptFileEditor : EditorWindow
+    {
+        private string filePath = "";
+        private string csvRawData;
+
+        [MenuItem("NullPointInteractive/DevTools/File Editor/Encrypt Target File")]
+        public static void ShowWindow()
+        {
+            EditorWindow.GetWindow(typeof(EncryptFileEditor), false, "Encrypt File Eidtor");
+        }
+
+        private Vector2 scrollPosition = Vector2.zero;
+        private void OnGUI()
+        {
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(position.width), GUILayout.Height(position.height));
+            GUILayout.Space(10);
+            GUILayout.Label("Target CSV");
+            GUILayout.Label(filePath);
+
+            GUILayout.Space(10);
+            if (GUILayout.Button("Select CSV"))
+            {
+                filePath = $"{EditorUtility.OpenFilePanel("Select File", "", "")}";
+                csvRawData = FIOSystem.LoadCSV(filePath);
+            }
+
+            GUILayout.Space(10);
+            if (GUILayout.Button("Encrpyt"))
+            {
+                float progress = 0;
+                EditorUtility.DisplayProgressBar("Writing CSV Progress Bar", "Storing CSV...", progress);
+                FIOSystem.StoreCSV(Path.GetFileName(filePath).Split('.')[0], csvRawData).GetAwaiter();
+                progress = 100;
+                AssetDatabase.Refresh();
+                EditorUtility.ClearProgressBar();
+            }
+
+            GUILayout.Space(10);
+            if (GUILayout.Button("Close"))
+            {
+                this.Close();
+            }
+
+            GUILayout.Space(10);
+            GUILayout.EndScrollView();
+        }
+    }
+
+    public class EncrpytFolderEditor : EditorWindow
+    {
+        private string folderPath = "";
+        private List<string> fnameList = new List<string>();
+        private List<string> csvDataList = new List<string>();
+        [MenuItem("NullPointInteractive/DevTools/File Editor/Encrypt Folder Files")]
+        public static void ShowWindow()
+        {
+            EditorWindow.GetWindow(typeof(EncrpytFolderEditor), false, "Encrypt Folder Files Eidtor");
+        }
+
+        private Vector2 scrollPosition = Vector2.zero;
+        private void OnGUI()
+        {
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(position.width), GUILayout.Height(position.height));
+            GUILayout.Space(10);
+            GUILayout.Label("Target Folder");
+            GUILayout.Label(folderPath);
+
+            GUILayout.Space(10);
+            if (GUILayout.Button("Select Folder"))
+            {
+                folderPath = $"{EditorUtility.OpenFolderPanel("Select Folder", "", "")}";
+                foreach(string fname in FIOSystem.GetAllFileInDirectory(folderPath, new string[] { ".meta" }))
+                {
+                    string csvData = FIOSystem.LoadCSV($"{folderPath}/{fname}");
+                    fnameList.Add(fname);
+                    csvDataList.Add(csvData);
+                }
+            }
+
+            GUILayout.Space(10);
+            if (GUILayout.Button("Encrpyt"))
+            {
+                float progress = 0;
+                EditorUtility.DisplayProgressBar("Writing CSV Progress Bar", "Storing CSV...", progress);
+                for (int i = 0; i < csvDataList.Count; i++)
+                {
+                    string csvData = csvDataList[i];
+                    string fname = fnameList[i];
+                    FIOSystem.StoreCSV(Path.GetFileName(fname).Split('.')[0], csvData).GetAwaiter();
+                    progress = i/csvDataList.Count;
+                }
+                AssetDatabase.Refresh();
+                EditorUtility.ClearProgressBar();
+            }
+
+            GUILayout.Space(10);
+            if (GUILayout.Button("Close"))
+            {
+                this.Close();
+            }
+
+            GUILayout.Space(10);
+            GUILayout.EndScrollView();
+        }
+    }
+}

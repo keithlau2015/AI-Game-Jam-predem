@@ -1,0 +1,19 @@
+using System;
+
+public class PauseManager : Singleton<PauseManager>
+{
+    public bool isPause { get; private set; }
+    public event Action<bool> OnPause;
+
+    public void Pause(bool pause)
+    {
+        isPause = pause;
+        OnPause?.Invoke(pause);
+    }
+
+    protected override void OnDestroy()
+    {
+        OnPause = null;
+        base.OnDestroy();
+    }
+}

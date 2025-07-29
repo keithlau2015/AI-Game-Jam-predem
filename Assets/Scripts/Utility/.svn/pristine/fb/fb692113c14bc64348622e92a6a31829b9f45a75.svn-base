@@ -1,0 +1,91 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using UnityEditor;
+
+#if UNITY_EDITOR
+public class CSVManager : Singleton<CSVManager>
+{
+    public enum SelectPath
+    {
+        input = 0,
+        output = 1,
+    }
+
+    private const string fileExtension = "csv";
+    private string inputFilePath = "";
+    private string outpuitFilePath = "";
+
+    public Dictionary<string, List<string>> rawData { get; private set; } = new Dictionary<string, List<string>>();
+
+    public void SelectFilePath(SelectPath selectPath)
+    {
+        if(selectPath == SelectPath.input)
+            inputFilePath = EditorUtility.OpenFilePanel("Import CSV", "", fileExtension);
+        else if(selectPath == SelectPath.output)
+            outpuitFilePath = EditorUtility.OpenFilePanel("Export CSV", "", fileExtension);
+    }
+
+    public async void ExtractData(string dataKey)
+    {
+        if (inputFilePath == "")
+            return;
+
+        await Task.Run(() =>
+        {
+            using (var reader = new StreamReader(inputFilePath))
+            {
+                bool isFirstLine = true;
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    if (isFirstLine)
+                    {
+                        isFirstLine = false;
+                        continue;
+                    }
+                    var values = line.Split(',');
+                    List<string> datas = new List<string>();
+                    foreach (string value in values)
+                    {
+                        datas.Add(value);
+                    }
+
+                    rawData.Add(dataKey, datas);
+                }
+
+                reader.Close();
+            }
+        });        
+    }
+
+    public async void ExportData(List<string> data)
+    {
+        if (outpuitFilePath == "")
+            return;
+
+        await Task.Run(() => {
+            using (var file = new StreamWriter(outpuitFilePath))
+            {
+                foreach (var item in data)
+                {
+                    file.WriteLineAsync(item);
+                }
+
+                file.Flush();
+            }
+        });
+    }
+
+    public void DeleteData(string dataKey)
+    {
+        rawData.Remove(dataKey);
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        rawData.Clear();
+    }
+}
+#endif

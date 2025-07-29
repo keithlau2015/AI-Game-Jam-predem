@@ -1,0 +1,39 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace BehaviourTree
+{
+    public class Selector : Node
+    {
+        public Selector() : base() { }
+        public Selector(List<Node> child) : base(child) { }
+        public override NodeState Evaluate()
+        {
+            foreach (Node node in child)
+            {
+                if (node.Evaluate().Equals(NodeState.Fail))
+                {
+                    continue;
+                }
+                else if (node.Evaluate().Equals(NodeState.Success))
+                {
+                    state = NodeState.Success;
+                    return state;
+                }
+                else if (node.Evaluate().Equals(NodeState.Running))
+                {
+                    state = NodeState.Running;
+                    return state;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            state = NodeState.Fail;
+            return state;
+        }
+    }
+}
