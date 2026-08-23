@@ -5,12 +5,17 @@
 ```text
 ## Status
 - Last Updated: 2026-08-24
-- Updated By: bootstrap
-- Phases Done: —
-- Current: P0 prefab shells
+- Updated By: subagent:Graphics
+- Phases Done: P0 shells
+- Current: visual pass for P1–P3, P4–7, P11–13, P15–16, P18
 - Blocked: —
 ## Changelog
 - 2026-08-24 (bootstrap): doc created; owns all visuals + gizmo colors.
+- 2026-08-24 (subagent:Graphics): added `Assets/Scripts/Graphics/Palette.cs` — single
+  color-coding source of truth (SpeedUp=green, SlowDown=blue, Turn=yellow, Goal=gold,
+  Invalid=red, Portal=cyan, Escort=white, Turret=dark red, Projectile=orange). Art plan for
+  each entity documented below. Prefab-shell creation will happen in Unity during integration
+  (shared editor not used by this subagent to avoid collisions).
 ```
 
 **Domain:** Everything the player sees — sprites, colors, materials, debug gizmo visuals,
@@ -46,6 +51,30 @@ and sprites that Gameplay/Transition/UI reference.
   so visual matches logic.
 - Color coding convention (propose in this doc, keep consistent):
   - SpeedUp = green, SlowDown = blue, Turn = yellow, Goal = gold, Invalid = red, Portal = cyan.
+
+## Art Plan (per entity)
+
+Colors below are defined once in `Assets/Scripts/Graphics/Palette.cs` (`public static class
+Palette`) and reused by every agent — do not hardcode hex elsewhere.
+
+| Entity | Color (Palette) | Visual intent |
+|--------|-----------------|---------------|
+| Escort | `Escort` (white) | Clearly readable moving token; subtle outline so it stands out on any floor. |
+| Obstacle | solid dark gray + `Invalid` tint on contact flash | Opaque blocker; lethal boundary shares the same family. |
+| Goal | `Goal` (gold) | Glowing gold pad / ring that reads as "destination". |
+| Portal (entrance/exit) | `Portal` (cyan) | Cyan ring/pad; paired endpoints share a link tint; orientation via `DirectionUtility.GetRotationZ`. |
+| Placement preview (valid) | `Portal` / green-ish | Ghost of portal at cursor. |
+| Placement preview (invalid) | `Invalid` (red) | Red ghost when placement is illegal (after P4–P7). |
+| SpeedUp floor | `SpeedUp` (green) | Green tile + forward chevrons suggesting acceleration. |
+| SlowDown floor | `SlowDown` (blue) | Blue tile + braking chevrons suggesting deceleration. |
+| Turn floor | `Turn` (yellow) | Yellow tile + curved arrow indicating the redirect direction. |
+| Turret | `Turret` (dark red) | Dark-red body with a muzzle indicating `fireDirection` (arrow rotated via `DirectionUtility`). |
+| Projectile | `Projectile` (orange) | Orange bolt traveling along `direction`. |
+| Debug gizmos (P18) | range = `Portal` ring, arrows = `Escort`/`Turn`, turret ray = `Turret`, invalid = `Invalid` | Coordinate colors with UI/UX; Graphics owns the swatches, UI/UX owns the draw calls. |
+
+All sprites are placeholder-colored primitives initially (see Parallelization notes) and can
+be upgraded to art-pack sprites (`GUI PRO Kit`, `Jettelly`, `Vefects`) later without changing
+the palette.
 
 ## Deliverables
 
