@@ -26,7 +26,7 @@
 
 | Domain | Owner Agent | Phases | Done | Current | Blocked By | Last Updated | Updated By |
 |--------|-------------|--------|------|---------|-----------|--------------|-----------|
-| GameMechanism | GameMechanism | P0, P1, P8, P9, P11–P14 | — | P0 baseline | — | 2026-08-24 | bootstrap |
+| GameMechanism | GameMechanism | P0, P1, P8, P9, P11–P14 | P0,P1 | P8,P9,P11–P14 | — | 2026-08-24 | subagent:GameMechanism |
 | Gameplay | Gameplay | P2, P3, P15, P16, P19 | — | — | — | 2026-08-24 | bootstrap |
 | Transition | Transition | P0, P3, P4–P7, P10, P20 | — | P0 baseline | — | 2026-08-24 | bootstrap |
 | UI/UX | UI/UX | P17, P18 | — | — | — | 2026-08-24 | bootstrap |
@@ -74,3 +74,4 @@
 ## Changelog
 - 2026-08-24 (bootstrap): docs scaffold + `Progress.md` established as singular tracker;
   `AGENTS.md` enforced as mandatory entry; per-sprint docs created under `docs/sprints/`.
+- 2026-08-24 (subagent:GameMechanism / feature/mechanism): implemented Direction, DirectionUtility, EscortTarget, PortalEndpoint, PortalPairController, FloorEffect; updated docs.

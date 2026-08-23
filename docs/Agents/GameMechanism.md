@@ -5,12 +5,13 @@
 ```text
 ## Status
 - Last Updated: 2026-08-24
-- Updated By: bootstrap
-- Phases Done: —
-- Current: P0 baseline (Direction + EscortTarget)
+- Updated By: subagent:GameMechanism
+- Phases Done: P0, P1
+- Current: P8, P9, P11–P14
 - Blocked: —
 ## Changelog
 - 2026-08-24 (bootstrap): doc created; owns Direction/EscortTarget/teleport/floor contracts.
+- 2026-08-24 (subagent:GameMechanism): implemented Direction/DirectionUtility (P0), EscortTarget continuous movement (P1); added PortalEndpoint/PortalPairController (P8,P9) and FloorEffect (P11–P14); updated Progress.md + this doc.
 ```
 
 **Domain:** Core gameplay engine — the rules that make the escort + portal + floor loop work.
