@@ -27,7 +27,7 @@
 | Domain | Owner Agent | Phases | Done | Current | Blocked By | Last Updated | Updated By |
 |--------|-------------|--------|------|---------|-----------|--------------|-----------|
 | GameMechanism | GameMechanism | P0, P1, P8, P9, P11–P14 | — | P0 baseline | — | 2026-08-24 | bootstrap |
-| Gameplay | Gameplay | P2, P3, P15, P16, P19 | — | — | — | 2026-08-24 | bootstrap |
+| Gameplay | Gameplay | P2, P3, P15, P16, P19 | P2, P3 | P15, P16, P19 | — | 2026-08-24 | subagent:Gameplay |
 | Transition | Transition | P0, P3, P4–P7, P10, P20 | — | P0 baseline | — | 2026-08-24 | bootstrap |
 | UI/UX | UI/UX | P17, P18 | — | — | — | 2026-08-24 | bootstrap |
 | Graphics | Graphics | P0, P1–3 vis, P4–7 vis, P11–13 vis, P15–16 vis, P18 vis | — | P0 shells | — | 2026-08-24 | bootstrap |
@@ -74,3 +74,4 @@
 ## Changelog
 - 2026-08-24 (bootstrap): docs scaffold + `Progress.md` established as singular tracker;
   `AGENTS.md` enforced as mandatory entry; per-sprint docs created under `docs/sprints/`.
+- 2026-08-24 (subagent:Gameplay / feature/gameplay): implemented EscortSpawner, Obstacle, Boundary, Goal, Turret, Projectile; updated docs.

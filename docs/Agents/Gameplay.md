@@ -5,12 +5,13 @@
 ```text
 ## Status
 - Last Updated: 2026-08-24
-- Updated By: bootstrap
-- Phases Done: —
-- Current: —
+- Updated By: subagent:Gameplay
+- Phases Done: P2, P3
+- Current: P15, P16, P19
 - Blocked: —
 ## Changelog
 - 2026-08-24 (bootstrap): doc created; owns spawner/hazards/turret/projectile/level.
+- 2026-08-24 (subagent:Gameplay): implemented EscortSpawner (P2), Obstacle/Boundary/Goal (P3), Turret (P15), Projectile (P16); updated docs.
 ```
 
 **Domain:** Spawning, hazards, level geometry, turret/projectile combat.
