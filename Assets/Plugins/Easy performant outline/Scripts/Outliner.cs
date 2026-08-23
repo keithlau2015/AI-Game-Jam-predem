@@ -1,13 +1,46 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 
 namespace EPOOutline
 {
-    /// <summary>
-    /// The component that is responsible for rendering the ouline and holding its parameters.
-    /// </summary>
+    public enum DilateQuality
+    {
+        Base,
+        High,
+        Ultra
+    }
+
+    public enum RenderingMode
+    {
+        LDR,
+        HDR
+    }
+
+    public enum OutlineRenderingStrategy
+    {
+        Default,
+        PerObject
+    }
+
+    public enum RenderStage
+    {
+        BeforeTransparents,
+        AfterTransparents
+    }
+
+    public enum BufferSizeMode
+    {
+        WidthControllsHeight,
+        HeightControlsWidth,
+        Scaled,
+        Native
+    }
+
     [ExecuteAlways]
     [RequireComponent(typeof(Camera))]
     public class Outliner : MonoBehaviour
@@ -18,14 +51,12 @@ namespace EPOOutline
         private static List<Outliner> outliners = new List<Outliner>();
 #endif
 
-        private static List<Outlinable> temporaryOutlinables = new List<Outlinable>();
+        private static List<Outlinable> temporaryOutlinables = new List<Outlinable>(); 
 
-        private OutlineParameters parameters;
-        private OutlineParameters Parameters => parameters ??= new OutlineParameters(new BasicCommandBufferWrapper(new CommandBuffer()));
+        private OutlineParameters parameters = new OutlineParameters();
 
 #if UNITY_EDITOR
-        private OutlineParameters editorPreviewParameters;
-        private OutlineParameters EditorPreviewParameters => editorPreviewParameters ??= new OutlineParameters(new BasicCommandBufferWrapper(new CommandBuffer()));
+        private OutlineParameters editorPreviewParameters = new OutlineParameters();
 #endif
 
         private Camera targetCamera;
@@ -61,142 +92,236 @@ namespace EPOOutline
         private float dilateShift = 1.0f;
 
         [SerializeField]
+        [FormerlySerializedAs("dilateIterrations")]
         private int dilateIterations = 1;
 
         [SerializeField]
         private DilateQuality dilateQuality;
 
         [SerializeField]
+        [FormerlySerializedAs("blurIterrations")]
         private int blurIterations = 1;
 
         [SerializeField]
         private BlurType blurType = BlurType.Box;
 
-        private RTHandle target;
+        [Obsolete]
+        public float InfoRendererScale
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
 
-        private RTHandle primaryBuffer;
-        private RTHandle targetBuffer;
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
         
-        private CameraEvent Event => stage == RenderStage.BeforeTransparents ? CameraEvent.AfterForwardOpaque : CameraEvent.BeforeImageEffects;
-
-        /// <summary>
-        /// Used to calculate the buffer size if <see cref="EPOOutline.BufferSizeMode.WidthControlsHeight"/> or <see cref="EPOOutline.BufferSizeMode.HeightControlsWidth"/> is set to <see cref="EPOOutline.Outliner.PrimaryBufferSizeMode"/>.
-        /// <seealso cref="EPOOutline.BufferSizeMode.WidthControlsHeight"/>
-        /// <seealso cref="EPOOutline.BufferSizeMode.HeightControlsWidth"/>
-        /// </summary>
         public int PrimarySizeReference
         {
-            get => primarySizeReference;
-            set => primarySizeReference = value < 10 ? 50 : value;
+            get
+            {
+                return primarySizeReference;
+            }
+
+            set
+            {
+                primarySizeReference = value;
+            }
         }
 
-        /// <summary>
-        /// <see cref="EPOOutline.BufferSizeMode"/> that will be used for this outliner.
-        /// </summary>
         public BufferSizeMode PrimaryBufferSizeMode
         {
-            get => primaryBufferSizeMode;
-            set => primaryBufferSizeMode = value;
+            get
+            {
+                return primaryBufferSizeMode;
+            }
+
+            set
+            {
+                primaryBufferSizeMode = value;
+            }
         }
 
-        /// <summary>
-        /// <see cref="EPOOutline.OutlineRenderingStrategy"/> that is going to be used by this outliner.
-        /// </summary>
+        private CameraEvent Event
+        {
+            get
+            {
+                return stage == RenderStage.BeforeTransparents ? CameraEvent.AfterForwardOpaque : CameraEvent.BeforeImageEffects;
+            }
+        }
+
         public OutlineRenderingStrategy RenderingStrategy
         {
-            get => renderingStrategy;
-            set => renderingStrategy = value;
+            get
+            {
+                return renderingStrategy;
+            }
+
+            set
+            {
+                renderingStrategy = value;
+            }
         }
 
-        /// <summary>
-        /// <see cref="EPOOutline.RenderStage"/> to use for this outliner.
-        /// </summary>
         public RenderStage RenderStage
         {
-            get => stage;
-            set => stage = value;
+            get
+            {
+                return stage;
+            }
+
+            set
+            {
+                stage = value;
+            }
         }
 
-        /// <summary>
-        /// <see cref="EPOOutline.DilateQuality"/> that is going to be used for this outliner.
-        /// </summary>
         public DilateQuality DilateQuality
         {
-            get => dilateQuality;
-            set => dilateQuality = value;
+            get
+            {
+                return dilateQuality;
+            }
+
+            set
+            {
+                dilateQuality = value;
+            }
         }
 
-        /// <summary>
-        /// <see cref="EPOOutline.RenderingMode"/> that is going to be used for this outliner. For HDRP it's always <see cref="EPOOutline.RenderingMode.HDR"/>.
-        /// </summary>
-        public RenderingMode RenderingMode
+        private RenderingMode RenderingMode
         {
-            get => renderingMode;
-            set => renderingMode = value;
+            get
+            {
+                return renderingMode;
+            }
+
+            set
+            {
+                renderingMode = value;
+            }
         }
 
-        /// <summary>
-        /// Blur shift amount that is going to be applied to this outliner. The more, the higher the shift will be.
-        /// </summary>
         public float BlurShift
         {
-            get => blurShift;
-            set => blurShift = Mathf.Clamp(value, 0, 2.0f);
+            get
+            {
+                return blurShift;
+            }
+
+            set
+            {
+                blurShift = Mathf.Clamp(value, 0, 2.0f);
+            }
         }
 
-        /// <summary>
-        /// Dilate shift amount that is going to be applied to this outliner. The more, the higher the dilate will be.
-        /// </summary>
         public float DilateShift
         {
-            get => dilateShift;
-            set => dilateShift = Mathf.Clamp(value, 0, 2.0f);
+            get
+            {
+                return dilateShift;
+            }
+
+            set
+            {
+                dilateShift = Mathf.Clamp(value, 0, 2.0f);
+            }
         }
 
-        /// <summary>
-        /// The layer mask that will be used to filter the <see cref="EPOOutline.Outlinable"/> before rendering.
-        /// <seealso cref="EPOOutline.Outlinable.OutlineLayer"/>
-        /// </summary>
         public long OutlineLayerMask
         {
-            get => outlineLayerMask;
-            set => outlineLayerMask = value;
+            get
+            {
+                return outlineLayerMask;
+            }
+
+            set
+            {
+                outlineLayerMask = value;
+            }
         }
 
-        /// <summary>
-        /// The value to scale the primary buffer size if <see cref="EPOOutline.Outliner.PrimaryBufferSizeMode"/> is set to <see cref="EPOOutline.BufferSizeMode.Scaled"/>.
-        /// </summary>
         public float PrimaryRendererScale
         {
-            get => primaryRendererScale;
-            set => primaryRendererScale = Mathf.Clamp(value, 0.1f, 1.0f);
+            get
+            {
+                return primaryRendererScale;
+            }
+
+            set
+            {
+                primaryRendererScale = Mathf.Clamp01(value);
+            }
         }
 
-        /// <summary>
-        /// The count of blur iterations to apply.
-        /// </summary>
+        [Obsolete("Fixed incorrect spelling. Use BlurIterations instead")]
+        public int BlurIterrations
+        {
+            get
+            {
+                return BlurIterations;
+            }
+
+            set
+            {
+                BlurIterations = value;
+            }
+        }
+
         public int BlurIterations
         {
-            get => blurIterations;
-            set => blurIterations = value > 0 ? value : 0;
+            get
+            {
+                return blurIterations;
+            }
+
+            set
+            {
+                blurIterations = value > 0 ? value : 0;
+            }
         }
 
-        /// <summary>
-        /// <see cref="EPOOutline.BlurType"/> to use for this outliner.
-        /// </summary>
         public BlurType BlurType
         {
-            get => blurType;
-            set => blurType = value;
+            get
+            {
+                return blurType;
+            }
+
+            set
+            {
+                blurType = value;
+            }
         }
 
-        /// <summary>
-        /// The count of dilate iterations to apply.
-        /// </summary>
+        [Obsolete("Fixed incorrect spelling. Use DilateIterations instead")]
+        public int DilateIterration
+        {
+            get
+            {
+                return DilateIterations;
+            }
+
+            set
+            {
+                DilateIterations = value;
+            }
+        }
+
         public int DilateIterations
         {
-            get => dilateIterations;
-            set => dilateIterations = value > 0 ? value : 0;
+            get
+            {
+                return dilateIterations;
+            }
+
+            set
+            {
+                dilateIterations = value > 0 ? value : 0;
+            }
         }
 
         private void OnValidate()
@@ -206,19 +331,6 @@ namespace EPOOutline
 
             if (dilateIterations < 0)
                 dilateIterations = 0;
-
-            if (primarySizeReference < 10)
-                primarySizeReference = 10;
-            else if (primarySizeReference > 4096)
-                primarySizeReference = 4096;
-
-            primaryRendererScale = Mathf.Clamp(primaryRendererScale, 0.1f, 1.0f);
-
-            if (blurType < BlurType.Box)
-                blurType = BlurType.Box;
-
-            if (blurType > BlurType.Gaussian13x13)
-                blurType = BlurType.Gaussian13x13;
         }
 
         private void OnEnable()
@@ -231,20 +343,35 @@ namespace EPOOutline
 #if UNITY_EDITOR
             outliners.Add(this);
 #endif
+
+            parameters.CheckInitialization();
+            parameters.Buffer.name = "Outline";
+
+#if UNITY_EDITOR
+            editorPreviewParameters.CheckInitialization();
+
+            editorPreviewParameters.Buffer.name = "Editor outline";
+#endif
         }
 
         private void OnDestroy()
         {
 #if UNITY_EDITOR
-            EditorPreviewParameters.Dispose();
+            GameObject.DestroyImmediate(editorPreviewParameters.BlitMesh);
+            if (editorPreviewParameters.Buffer != null)
+                editorPreviewParameters.Buffer.Dispose();
 #endif
-            Parameters.Dispose();
+
+            GameObject.DestroyImmediate(parameters.BlitMesh);
+
+            if (parameters.Buffer != null)
+                parameters.Buffer.Dispose();
         }
 
         private void OnDisable()
         {
             if (targetCamera != null)
-                UpdateBuffer(targetCamera, Parameters.Buffer, true);
+                UpdateBuffer(targetCamera, parameters.Buffer, true);
 
 #if UNITY_EDITOR
             RemoveFromAllSceneViews();
@@ -253,57 +380,39 @@ namespace EPOOutline
 #endif
 
 #if UNITY_EDITOR
-            if (RenderPipelineManager.currentPipeline != null)
-                return;
-            
-            if (!(EditorPreviewParameters.Buffer is IUnderlyingBufferProvider bufferProvider))
-                return;
-            
-            var underlyingBuffer = bufferProvider.UnderlyingBuffer;
-            
             foreach (var view in UnityEditor.SceneView.sceneViews)
             {
                 var viewToUpdate = (UnityEditor.SceneView)view;
-                
-                viewToUpdate.camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, underlyingBuffer);
-                viewToUpdate.camera.RemoveCommandBuffer(CameraEvent.AfterForwardOpaque, underlyingBuffer);
+
+                viewToUpdate.camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, editorPreviewParameters.Buffer);
+                viewToUpdate.camera.RemoveCommandBuffer(CameraEvent.AfterForwardOpaque, editorPreviewParameters.Buffer);
             }
 #endif
         }
 
-        private void UpdateBuffer(Camera cameraToUpdate, CommandBufferWrapper buffer, bool removeOnly)
+        private void UpdateBuffer(Camera targetCamera, CommandBuffer buffer, bool removeOnly)
         {
-            if (RenderPipelineManager.currentPipeline != null)
-                return;
-            
-            if (!(buffer is IUnderlyingBufferProvider bufferProvider))
-                return;
-
-            var underlyingBuffer = bufferProvider.UnderlyingBuffer;
-            if (underlyingBuffer == null)
-                return;
-
-            cameraToUpdate.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, underlyingBuffer);
-            cameraToUpdate.RemoveCommandBuffer(CameraEvent.AfterForwardOpaque, underlyingBuffer);
+            targetCamera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, buffer);
+            targetCamera.RemoveCommandBuffer(CameraEvent.AfterForwardOpaque, buffer);
             if (removeOnly)
                 return;
 
-            cameraToUpdate.AddCommandBuffer(Event, underlyingBuffer);
+            targetCamera.AddCommandBuffer(Event, buffer);
         }
 
         private void OnPreRender()
         {
-            if (PipelineFetcher.CurrentAsset != null)
+            if (GraphicsSettings.renderPipelineAsset != null)
                 return;
-            
-            Parameters.OutlinablesToRender.Clear();
-            SetupOutline(targetCamera, Parameters, false);
+
+            parameters.OutlinablesToRender.Clear();
+            SetupOutline(targetCamera, parameters, false);
         }
 
         private void SetupOutline(Camera cameraToUse, OutlineParameters parametersToUse, bool isEditor)
         {
             UpdateBuffer(cameraToUse, parametersToUse.Buffer, false);
-            PrepareParameters(parametersToUse, cameraToUse, isEditor);
+            UpdateParameters(parametersToUse, cameraToUse, isEditor);
 
             parametersToUse.Buffer.Clear();
             if (renderingStrategy == OutlineRenderingStrategy.Default)
@@ -334,9 +443,6 @@ namespace EPOOutline
 #if UNITY_EDITOR
         private void RemoveFromAllSceneViews()
         {
-            if (RenderPipelineManager.currentPipeline != null)
-                return;
-            
             foreach (var view in UnityEditor.SceneView.sceneViews)
             {
                 var viewToUpdate = (UnityEditor.SceneView)view;
@@ -344,13 +450,8 @@ namespace EPOOutline
                 if (eventTransferer != null)
                     eventTransferer.OnPreRenderEvent -= UpdateEditorCamera;
 
-                if (!(EditorPreviewParameters.Buffer is IUnderlyingBufferProvider bufferProvider))
-                    return;
-
-                var underlyingBuffer = bufferProvider.UnderlyingBuffer;
-                
-                viewToUpdate.camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, underlyingBuffer);
-                viewToUpdate.camera.RemoveCommandBuffer(CameraEvent.AfterForwardOpaque, underlyingBuffer);
+                viewToUpdate.camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, editorPreviewParameters.Buffer);
+                viewToUpdate.camera.RemoveCommandBuffer(CameraEvent.AfterForwardOpaque, editorPreviewParameters.Buffer);
             }
         }
 
@@ -370,7 +471,7 @@ namespace EPOOutline
                 if (eventTransferer != null)
                     eventTransferer.OnPreRenderEvent -= UpdateEditorCamera;
 
-                UpdateBuffer(viewToUpdate.camera, EditorPreviewParameters.Buffer, true);
+                UpdateBuffer(viewToUpdate.camera, editorPreviewParameters.Buffer, true);
             }
 
             if (!isSelected)
@@ -390,142 +491,64 @@ namespace EPOOutline
             }
         }
 
-        private void UpdateEditorCamera(Camera cameraToUpdate)
+        private void UpdateEditorCamera(Camera camera)
         {
-            SetupOutline(cameraToUpdate, EditorPreviewParameters, true);
+            SetupOutline(camera, editorPreviewParameters, true);
         }
 #endif
 
-        public StereoTargetEyeMask GetTargetEyeMask(Camera cameraTarget)
+        public void UpdateSharedParameters(OutlineParameters parameters, Camera camera, bool editorCamera)
         {
-            return XRUtility.IsXRActive ? cameraTarget.stereoTargetEye : StereoTargetEyeMask.None;
+            parameters.DilateQuality = DilateQuality;
+            parameters.Camera = camera;
+            parameters.IsEditorCamera = editorCamera;
+            parameters.PrimaryBufferScale = primaryRendererScale;
+
+            parameters.PrimaryBufferSizeMode = primaryBufferSizeMode;
+            parameters.PrimaryBufferSizeReference = primarySizeReference;
+
+            parameters.BlurIterations = blurIterations;
+            parameters.BlurType = blurType;
+            parameters.DilateIterations = dilateIterations;
+            parameters.BlurShift = blurShift;
+            parameters.DilateShift = dilateShift;
+            parameters.UseHDR = camera.allowHDR && (RenderingMode == RenderingMode.HDR);
+            parameters.EyeMask = camera.stereoTargetEye;
+
+            parameters.OutlineLayerMask = outlineLayerMask;
+
+            parameters.Prepare();
         }
 
-        public void UpdateSharedParameters(OutlineParameters parametersToUpdate, Camera cameraToUpdate, bool editorCamera, bool forceNative, bool forceHDR)
+        private void UpdateParameters(OutlineParameters parameters, Camera camera, bool editorCamera)
         {
-            parametersToUpdate.DilateQuality = DilateQuality;
-            parametersToUpdate.Camera = cameraToUpdate;
-            parametersToUpdate.IsEditorCamera = editorCamera;
-            parametersToUpdate.PrimaryBufferScale = forceNative ? 1.0f : primaryRendererScale;
+            parameters.DepthTarget = RenderTargetUtility.ComposeTarget(parameters, BuiltinRenderTextureType.CameraTarget);
 
-            if (forceNative)
-                parametersToUpdate.PrimaryBufferSizeMode = BufferSizeMode.Native;
-            else
+            var targetTexture = camera.targetTexture == null ? camera.activeTexture : camera.targetTexture;
+
+            if (UnityEngine.XR.XRSettings.enabled
+                && !parameters.IsEditorCamera
+                && parameters.EyeMask != StereoTargetEyeMask.None)
             {
-                parametersToUpdate.PrimaryBufferSizeMode = primaryBufferSizeMode;
-                parametersToUpdate.PrimaryBufferSizeReference = primarySizeReference;
-            }
-
-            parametersToUpdate.BlurIterations = blurIterations;
-            parametersToUpdate.BlurType = blurType;
-            parametersToUpdate.DilateIterations = dilateIterations;
-            parametersToUpdate.BlurShift = blurShift;
-            parametersToUpdate.DilateShift = dilateShift;
-            parametersToUpdate.UseHDR = forceHDR || cameraToUpdate.allowHDR && (RenderingMode == RenderingMode.HDR);
-            parametersToUpdate.EyeMask = GetTargetEyeMask(cameraToUpdate);
-
-            parametersToUpdate.OutlineLayerMask = outlineLayerMask;
-            
-            parametersToUpdate.Prepare();
-            
-            parametersToUpdate.TextureHandleMap.Clear();
-            foreach (var outlinable in parametersToUpdate.OutlinablesToRender)
-            {
-                for (var index = 0; index < outlinable.OutlineTargets.Count; index++)
-                {
-                    var outlineTarget = outlinable.OutlineTargets[index];
-                    if (outlineTarget.IsValidForCutout)
-                    {
-                        var cutoutTexture = outlineTarget.CutoutTexture;
-                        var rtHandle = parametersToUpdate.RTHandlePool.Allocate(cutoutTexture);
-                        parametersToUpdate.TextureHandleMap[cutoutTexture] = rtHandle;
-                    }
-
-                    if (outlineTarget.Renderer is SpriteRenderer spriteRenderer)
-                    {
-                        var texture = spriteRenderer.sprite.texture;
-                        var rtHandle = parametersToUpdate.RTHandlePool.Allocate(texture);
-                        parametersToUpdate.TextureHandleMap[texture] = rtHandle;
-                    }
-                }
-            }
-        }
-
-        public void ReplaceHandles(OutlineParameters parametersToUpdate)
-        {
-            Replace(ref parametersToUpdate.Handles.Target, parametersToUpdate.TargetWidth, parametersToUpdate.TargetHeight, parametersToUpdate,
-                (width, height, outlineParameters) => RenderTargetUtility.GetRT(outlineParameters, width, height, "Target"));
-            
-            Replace(ref parametersToUpdate.Handles.InfoTarget, parametersToUpdate.TargetWidth, parametersToUpdate.TargetHeight, parametersToUpdate,
-                (width, height, outlineParameters) => RenderTargetUtility.GetRT(outlineParameters, width, height, "Info target"));
-            
-            var (scaledWidth, scaledHeight) = parametersToUpdate.ScaledSize;
-            
-            Replace(ref parametersToUpdate.Handles.PrimaryTarget, scaledWidth, scaledHeight, parametersToUpdate,
-                (width, height, outlineParameters) => RenderTargetUtility.GetRT(outlineParameters, width, height, "Primary target"));
-            
-            Replace(ref parametersToUpdate.Handles.SecondaryTarget, scaledWidth, scaledHeight, parametersToUpdate,
-                (width, height, outlineParameters) => RenderTargetUtility.GetRT(outlineParameters, width, height, "Secondary target"));
-            
-            Replace(ref parametersToUpdate.Handles.PrimaryInfoBufferTarget, scaledWidth, scaledHeight, parametersToUpdate,
-                (width, height, outlineParameters) => RenderTargetUtility.GetRT(outlineParameters, width, height, "Primary info target"));
-            
-            Replace(ref parametersToUpdate.Handles.SecondaryInfoBufferTarget, scaledWidth, scaledHeight, parametersToUpdate,
-                (width, height, outlineParameters) => RenderTargetUtility.GetRT(outlineParameters, width, height, "Secondary info target"));
-        }
-
-        private static void Replace(ref RTHandle handle, int width, int height, OutlineParameters parameters, Func<int, int, OutlineParameters, RTHandle> newHandle)
-        {
-            if (handle != null)
-            {
-                if (width == handle.rtHandleProperties.currentRenderTargetSize.x &&
-                    height == handle.rtHandleProperties.currentRenderTargetSize.y &&
-                    handle.rt.descriptor.msaaSamples == parameters.Antialiasing)
-                    return;
-                
-                handle.Release();
-            }
-
-            handle = newHandle(width, height, parameters);
-            handle.SetCustomHandleProperties(new RTHandleProperties() { currentRenderTargetSize = new Vector2Int(width, height) });
-        }
-        
-        private void PrepareParameters(OutlineParameters parametersToPrepare, Camera cameraToUse, bool editorCamera)
-        {
-            parametersToPrepare.RTHandlePool.ReleaseAll();
-            
-            parametersToPrepare.DepthTarget = parametersToPrepare.RTHandlePool.Allocate(RenderTargetUtility.ComposeTarget(parametersToPrepare, BuiltinRenderTextureType.CameraTarget));
-            parametersToPrepare.Target = parametersToPrepare.RTHandlePool.Allocate(RenderTargetUtility.ComposeTarget(parametersToPrepare, BuiltinRenderTextureType.CameraTarget));
-
-            var targetTexture = cameraToUse.targetTexture == null ? cameraToUse.activeTexture : cameraToUse.targetTexture;
-
-            if (XRUtility.IsUsingVR(parametersToPrepare))
-            {
-                var descriptor = XRUtility.VRRenderTextureDescriptor;
-                parametersToPrepare.TargetWidth = descriptor.width;
-                parametersToPrepare.TargetHeight = descriptor.height;
+                var descriptor = UnityEngine.XR.XRSettings.eyeTextureDesc;
+                parameters.TargetWidth = descriptor.width;
+                parameters.TargetHeight = descriptor.height;
             }
             else
             {
-                parametersToPrepare.TargetWidth = targetTexture != null ? targetTexture.width : cameraToUse.scaledPixelWidth;
-                parametersToPrepare.TargetHeight = targetTexture != null ? targetTexture.height : cameraToUse.scaledPixelHeight;
+                parameters.TargetWidth = targetTexture != null ? targetTexture.width : camera.scaledPixelWidth;
+                parameters.TargetHeight = targetTexture != null ? targetTexture.height : camera.scaledPixelHeight;
             }
 
-            parametersToPrepare.Viewport =
-                new Rect(0, 0, parametersToPrepare.TargetWidth, parametersToPrepare.TargetHeight);
+            parameters.Antialiasing = editorCamera ? (targetTexture == null ? 1 : targetTexture.antiAliasing) : CameraUtility.GetMSAA(targetCamera);
 
-            parametersToPrepare.Antialiasing = editorCamera ? (targetTexture == null ? 1 : targetTexture.antiAliasing) : CameraUtility.GetMSAA(targetCamera);
+            parameters.Target = RenderTargetUtility.ComposeTarget(parameters, BuiltinRenderTextureType.CameraTarget);
 
-            parametersToPrepare.Camera = cameraToUse;
+            parameters.Camera = camera;
 
-            var scaledSize = parametersToPrepare.ScaledSize;
-            parametersToPrepare.ScaledBufferWidth = scaledSize.ScaledWidth;
-            parametersToPrepare.ScaledBufferHeight = scaledSize.ScaledHeight;
-
-            Outlinable.GetAllActiveOutlinables(parametersToPrepare.OutlinablesToRender);
-            RendererFilteringUtility.Filter(parametersToPrepare.Camera, parametersToPrepare);
-            UpdateSharedParameters(parametersToPrepare, cameraToUse, editorCamera, false, false);
-            ReplaceHandles(parametersToPrepare);
+            Outlinable.GetAllActiveOutlinables(parameters.Camera, parameters.OutlinablesToRender);
+            RendererFilteringUtility.Filter(parameters.Camera, parameters);
+            UpdateSharedParameters(parameters, camera, editorCamera);
         }
     }
 }

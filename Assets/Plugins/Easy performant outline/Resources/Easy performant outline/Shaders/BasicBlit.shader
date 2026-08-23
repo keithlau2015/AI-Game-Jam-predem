@@ -21,6 +21,7 @@
             #pragma fragment frag
             #pragma multi_compile_instancing
 			#pragma fragmentoption ARB_precision_hint_fastest
+			#pragma multi_compile __ EDGE_MASK
             
             #include "UnityCG.cginc"
             #include "MiskCG.cginc"
@@ -51,10 +52,6 @@
             half4 _InitialTex_ST;
             half4 _InitialTex_TexelSize;
 
-            UNITY_INSTANCING_BUFFER_START (Properties)
-            UNITY_DEFINE_INSTANCED_PROP (float4x4, _NormalMatrices)
-            UNITY_INSTANCING_BUFFER_END(Properties)
-
 			DefineCoords
 
 			inline half GetColor(half2 coord, half2 shift)
@@ -80,6 +77,8 @@
 				
                 o.vertex = UnityObjectToClipPos(v.vertex);
 
+				PostprocessCoords
+
                 ComputeScreenShift
 					
 				CheckY
@@ -87,6 +86,9 @@
                 o.uv = ComputeScreenPos(o.vertex);
 				o.uv.xy *= _Scale;
 				
+#if UNITY_UV_STARTS_AT_TOP
+				ModifyUV
+#endif
                 return o;
             }
             
@@ -96,9 +98,19 @@
 
 				float2 uv = i.uv.xy / i.uv.w;
 
+#if EDGE_MASK
+				half center = GetColor(uv, 0.0f);
+				half sobel = Edge(center, uv, _MainTex_TexelSize.x, _MainTex_TexelSize.y, half2(1, 0)) + Edge(center, uv, _MainTex_TexelSize.x, _MainTex_TexelSize.y, half2(0, 1));
+
+				half mask = center > 0.01f && sobel < 0.01f;
+
+				clip(mask - 0.1f);
+				return float4(1, 0, 1, 1);
+#else
 				half4 texel = FetchTexel(uv);
 
 				return texel;
+#endif
             }
             ENDCG
         }

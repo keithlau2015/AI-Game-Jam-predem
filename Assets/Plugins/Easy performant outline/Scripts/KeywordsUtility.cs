@@ -7,6 +7,7 @@ namespace EPOOutline
     {
         private static Dictionary<BlurType, string> BlurTypes = new Dictionary<BlurType, string>
                 {
+                    { BlurType.Anisotropic,     "ANISOTROPIC_BLUR" },
                     { BlurType.Box,             "BOX_BLUR" },
                     { BlurType.Gaussian5x5,     "GAUSSIAN5X5" },
                     { BlurType.Gaussian9x9,     "GAUSSIAN9X9" },
@@ -15,7 +16,7 @@ namespace EPOOutline
 
         private static Dictionary<DilateQuality, string> DilateQualityKeywords = new Dictionary<DilateQuality, string>
                 {
-                    { DilateQuality.Base,       "BASE_QUALITY_DILATE" },
+                    { DilateQuality.Base,       "BASE_QALITY_DILATE" },
                     { DilateQuality.High,       "HIGH_QUALITY_DILATE" },
                     { DilateQuality.Ultra,      "ULTRA_QUALITY_DILATE" }
                 };
@@ -45,7 +46,7 @@ namespace EPOOutline
             switch (quality)
             {
                 case DilateQuality.Base:
-                    return "BASE_QUALITY_DILATE";
+                    return "BASE_QALITY_DILATE";
                 case DilateQuality.High:
                     return "HIGH_QUALITY_DILATE";
                 case DilateQuality.Ultra:
@@ -58,6 +59,11 @@ namespace EPOOutline
         public static string GetEnabledInfoBufferKeyword()
         {
             return "USE_INFO_BUFFER";
+        }
+
+        public static string GetEdgeMaskKeyword()
+        {
+            return "EDGE_MASK";
         }
 
         public static string GetInfoBufferStageKeyword()

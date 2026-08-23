@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -10,174 +11,116 @@ namespace EPOOutline
     {
         private UnityEditorInternal.ReorderableList targetsList;
 
-        private void CheckList(SerializedProperty targets)
+        private void CheckList(UnityEditor.SerializedProperty targets)
         {
-            if (targetsList != null) 
-                return;
-            
-            targetsList = new UnityEditorInternal.ReorderableList(serializedObject, targets);
+            if (targetsList == null)
+            {
+                targetsList = new UnityEditorInternal.ReorderableList(serializedObject, targets);
 
-            targetsList.drawHeaderCallback = position => EditorGUI.LabelField(position, "Renderers. All renderers that has to be outlined must be included here.");
+                targetsList.drawHeaderCallback = position => EditorGUI.LabelField(position, "Renderers. All renderers that will be included to outline rendering should be in the list.");
 
-            targetsList.drawElementCallback = (position, item, isActive, isFocused) =>
-                {
-                    var renderPosition = position;
-                    var element = targets.GetArrayElementAtIndex(item);
-                    var rendererItem = element.FindPropertyRelative("renderer");
-                    var reference = rendererItem.objectReferenceValue;
-
-                    EditorGUI.PropertyField(renderPosition, element, new GUIContent(reference == null ? "Null" : reference.name), true);
-                };
-
-            targetsList.elementHeightCallback = (index) => EditorGUI.GetPropertyHeight(targets.GetArrayElementAtIndex(index));
-
-            targetsList.onRemoveCallback = (list) =>
-                {
-                    var index = list.index;
-                    targets.DeleteArrayElementAtIndex(index);
-                    targets.serializedObject.ApplyModifiedProperties();
-                };
-
-            targetsList.onAddDropdownCallback = (buttonRect, targetList) =>
-                {
-                    var outlinable = target as Outlinable;
-                    var items = outlinable.gameObject.GetComponentsInChildren<Renderer>(true);
-                    var menu = new GenericMenu();
-
-                    if (!Application.isPlaying)
+                targetsList.drawElementCallback = (position, item, isActive, isFocused) =>
                     {
-                        menu.AddItem(new GUIContent("Add all renderers"), false, () =>
-                        {
-                            (target as Outlinable).AddAllChildRenderersToRenderingList(RenderersAddingMode.All);
+                        var renderPosition = position;
+                        var element = targets.GetArrayElementAtIndex(item);
+                        var rendererItem = element.FindPropertyRelative("renderer");
+                        var reference = rendererItem.objectReferenceValue;
 
-                            EditorUtility.SetDirty(target);
-                        });
+                        EditorGUI.PropertyField(renderPosition, element, new GUIContent(reference == null ? "Null" : reference.name), true);
+                    };
 
-                        menu.AddItem(new GUIContent("Add all basic renderers"), false, () =>
-                        {
-                            (target as Outlinable).AddAllChildRenderersToRenderingList(RenderersAddingMode.MeshRenderer | RenderersAddingMode.SkinnedMeshRenderer);
+                targetsList.elementHeightCallback = (index) => EditorGUI.GetPropertyHeight(targets.GetArrayElementAtIndex(index));
 
-                            EditorUtility.SetDirty(target);
-                        });
-                        
-                        menu.AddItem(new GUIContent("Add all skinned mesh renderers"), false, () =>
-                        {
-                            (target as Outlinable).AddAllChildRenderersToRenderingList(RenderersAddingMode.SkinnedMeshRenderer);
-
-                            EditorUtility.SetDirty(target);
-                        });
-                        
-                        menu.AddItem(new GUIContent("Add all mesh renderers"), false, () =>
-                        {
-                            (target as Outlinable).AddAllChildRenderersToRenderingList(RenderersAddingMode.MeshRenderer);
-
-                            EditorUtility.SetDirty(target);
-                        });
-                        
-                        menu.AddItem(new GUIContent("Add all sprite renderers"), false, () =>
-                        {
-                            (target as Outlinable).AddAllChildRenderersToRenderingList(RenderersAddingMode.SpriteRenderer);
-
-                            EditorUtility.SetDirty(target);
-                        });
-                    }
-
-                    var entryIndex = -1;
-                    foreach (var item in items)
+                targetsList.onRemoveCallback = (list) =>
                     {
-                        entryIndex++;
-                        var submeshCount = RendererUtility.GetSubmeshCount(item);
-                        
-                        var path = string.Empty;
-                        if (item.transform != outlinable.transform)
+                        var index = list.index;
+                        targets.DeleteArrayElementAtIndex(index);
+                        targets.serializedObject.ApplyModifiedProperties();
+                    };
+
+                targetsList.onAddDropdownCallback = (buttonRect, targetList) =>
+                    {
+                        var outlinable = target as Outlinable;
+                        var items = outlinable.gameObject.GetComponentsInChildren<Renderer>(true);
+                        var menu = new GenericMenu();
+
+                        if (!Application.isPlaying)
                         {
-                            var parent = item.transform;
-                            do
-                            {
-                                path = $"{parent}/{path}";
-                                parent = parent.transform.parent;
-                            } while (parent != outlinable.transform);
+                            menu.AddItem(new GUIContent("Add all"), false, () =>
+                                {
+                                    (target as Outlinable).AddAllChildRenderersToRenderingList(RenderersAddingMode.All);
 
-                            path = $"{parent}/{path}";
+                                    EditorUtility.SetDirty(target);
+                                });
 
-                            path = path.Substring(0, path.Length - 1);
+                            menu.AddItem(new GUIContent("Add all basic"), false, () =>
+                                {
+                                    (target as Outlinable).AddAllChildRenderersToRenderingList(RenderersAddingMode.MeshRenderer | RenderersAddingMode.SkinnedMeshRenderer);
+
+                                    EditorUtility.SetDirty(target);
+                                });
                         }
-                        else
-                            path = item.ToString();
 
-                        var foundSubmeshes = new HashSet<int>();
-                        for (var submeshIndex = 0; submeshIndex < submeshCount; submeshIndex++)
+                        menu.AddItem(new GUIContent("Empty"), false, () =>
+                            {
+                                (target as Outlinable).TryAddTarget(new OutlineTarget());
+
+                                EditorUtility.SetDirty(target);
+                            });
+
+                        foreach (var item in items)
                         {
                             var found = false;
                             for (var index = 0; index < targets.arraySize; index++)
                             {
                                 var element = targets.GetArrayElementAtIndex(index);
                                 var elementRenderer = element.FindPropertyRelative("renderer");
-                                if (elementRenderer.objectReferenceValue != item)
-                                    continue;
-
-                                var submesh = element.FindPropertyRelative("SubmeshIndex");
-                                if (submesh.intValue != submeshIndex)
-                                    continue;
-
-                                found = true;
-                                foundSubmeshes.Add(submeshIndex);
-                                break;
+                                if (elementRenderer.objectReferenceValue == item)
+                                {
+                                    found = true;
+                                    break;
+                                }
                             }
 
-                            var submeshChunk = submeshCount > 1 ? $"{path}/sub mesh {submeshIndex}" : path;
-                            var finalPath = $"{entryIndex}: {submeshChunk}";
-
-                            var capturedSubmeshIndex = submeshIndex;
-                            GenericMenu.MenuFunction function = () =>
+                            var path = string.Empty;
+                            if (item.transform != outlinable.transform)
                             {
-                                var index = targets.arraySize;
-                                targets.InsertArrayElementAtIndex(index);
-                                var arrayItem = targets.GetArrayElementAtIndex(index);
-                                var renderer = arrayItem.FindPropertyRelative("renderer");
-                                arrayItem.FindPropertyRelative("CutoutThreshold").floatValue = 0.5f;
-                                arrayItem.FindPropertyRelative("SubmeshIndex").intValue = capturedSubmeshIndex;
-                                renderer.objectReferenceValue = item;
+                                var parent = item.transform;
+                                do
+                                {
+                                    path = string.Format("{0}/{1}", parent.ToString(), path);
+                                    parent = parent.transform.parent;
+                                }
+                                while (parent != outlinable.transform);
 
-                                serializedObject.ApplyModifiedProperties();
-                            };
+                                path = string.Format("{0}/{1}", parent.ToString(), path);
+
+                                path = path.Substring(0, path.Length - 1);
+                            }
+                            else
+                                path = item.ToString();
+
+                            GenericMenu.MenuFunction function = () =>
+                                {
+                                    var index = targets.arraySize;
+                                    targets.InsertArrayElementAtIndex(index);
+                                    var arrayItem = targets.GetArrayElementAtIndex(index);
+                                    var renderer = arrayItem.FindPropertyRelative("Renderer");
+                                    arrayItem.FindPropertyRelative("CutoutThreshold").floatValue = 0.5f;
+                                    renderer.objectReferenceValue = item;
+
+                                    serializedObject.ApplyModifiedProperties();
+                                };
 
                             if (found)
                                 function = null;
 
-                            menu.AddItem(new GUIContent(finalPath), found, function);
+                            menu.AddItem(new GUIContent(path), found, function);
                         }
 
-                        if (submeshCount <= 1)
-                            continue;
-
-                        GenericMenu.MenuFunction allFunction = () =>
-                            {
-                                for (var submeshIndex = 0; submeshIndex < submeshCount; submeshIndex++)
-                                {
-                                    if (foundSubmeshes.Contains(submeshIndex))
-                                        continue;
-                                    
-                                    var index = targets.arraySize;
-                                    targets.InsertArrayElementAtIndex(index);
-                                    var arrayItem = targets.GetArrayElementAtIndex(index);
-                                    var renderer = arrayItem.FindPropertyRelative("renderer");
-                                    arrayItem.FindPropertyRelative("CutoutThreshold").floatValue = 0.5f;
-                                    arrayItem.FindPropertyRelative("SubmeshIndex").intValue = submeshIndex;
-                                    renderer.objectReferenceValue = item;
-
-                                    serializedObject.ApplyModifiedProperties();
-                                }
-                            };
-
-                        if (foundSubmeshes.Count == submeshCount)
-                            allFunction = null;
-                        
-                        menu.AddItem(new GUIContent($"{entryIndex}: {path}/All sub meshes"), foundSubmeshes.Count == submeshCount, allFunction);
-                    }
-
-                    menu.ShowAsContext();
-                };
+                        menu.ShowAsContext();
+                    };
+            }
         }
 
         public override void OnInspectorGUI()

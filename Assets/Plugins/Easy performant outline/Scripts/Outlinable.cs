@@ -1,16 +1,145 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 namespace EPOOutline
 {
-    /// <summary>
-    /// Component which holds the outline settings for a specific object.
-    /// </summary>
-    [ExecuteAlways]
-    public partial class Outlinable : MonoBehaviour
+    public enum DilateRenderMode
     {
+        PostProcessing,
+        EdgeShift
+    }
+
+    public enum RenderStyle
+    {
+        Single = 1,
+        FrontBack = 2
+    }
+
+    [Flags]
+    public enum OutlinableDrawingMode
+    {
+        Normal = 1,
+        ZOnly = 2,
+        GenericMask = 4,
+        Obstacle = 8,
+        Mask = 16
+    }
+
+    [Flags]
+    public enum RenderersAddingMode
+    {
+        All = -1,
+        None = 0,
+        MeshRenderer = 1,
+        SkinnedMeshRenderer = 2,
+        SpriteRenderer = 4,
+        Others = 4096
+    }
+
+    public enum BoundsMode
+    {
+        Default,
+        ForceRecalculate,
+        Manual
+    }
+
+    public enum ComplexMaskingMode
+    {
+        None,
+        ObstaclesMode,
+        MaskingMode
+    }
+
+    [ExecuteAlways]
+    public class Outlinable : MonoBehaviour
+    {
+        private static List<TargetStateListener> tempListeners = new List<TargetStateListener>();
+        
         private static HashSet<Outlinable> outlinables = new HashSet<Outlinable>();
+
+        [System.Serializable]
+        public class OutlineProperties
+        {
+#pragma warning disable CS0649
+            [SerializeField]
+            private bool enabled = true;
+
+            public bool Enabled
+            {
+                get
+                {
+                    return enabled;
+                }
+
+                set
+                {
+                    enabled = value;
+                }
+            }
+
+            [SerializeField]
+            private Color color = Color.yellow;
+
+            public Color Color
+            {
+                get
+                {
+                    return color;
+                }
+
+                set
+                {
+                    color = value;
+                }
+            }
+
+            [SerializeField]
+            [Range(0.0f, 1.0f)]
+            private float dilateShift = 1.0f;
+
+            public float DilateShift
+            {
+                get
+                {
+                    return dilateShift;
+                }
+
+                set
+                {
+                    dilateShift = value;
+                }
+            }
+
+            [SerializeField]
+            [Range(0.0f, 1.0f)]
+            private float blurShift = 1.0f;
+
+            public float BlurShift
+            {
+                get
+                {
+                    return blurShift;
+                }
+
+                set
+                {
+                    blurShift = value;
+                }
+            }
+
+            [SerializeField, SerializedPassInfo("Fill style", "Hidden/EPO/Fill/")]
+            private SerializedPass fillPass = new SerializedPass();
+
+            public SerializedPass FillPass
+            {
+                get
+                {
+                    return fillPass;
+                }
+            }
+#pragma warning restore CS0649
+        }
 
         [SerializeField]
         private ComplexMaskingMode complexMaskingMode;
@@ -41,119 +170,128 @@ namespace EPOOutline
         
 #pragma warning restore CS0649
 
-        /// <summary>
-        /// <see cref="EPOOutline.RenderStyle"/> to render the outlinable.
-        /// </summary>
         public RenderStyle RenderStyle
         {
-            get => renderStyle;
-            set => renderStyle = value;
+            get
+            {
+                return renderStyle;
+            }
+
+            set
+            {
+                renderStyle = value;
+            }
         }
 
-        /// <summary>
-        /// <see cref="EPOOutline.ComplexMaskingMode"/> to render the outlinable.
-        /// </summary>
         public ComplexMaskingMode ComplexMaskingMode
         {
-            get => complexMaskingMode;
-            set => complexMaskingMode = value;
+            get
+            {
+                return complexMaskingMode;
+            }
+
+            set
+            {
+                complexMaskingMode = value;
+            }
         }
 
-        /// <summary>
-        /// <see cref="EPOOutline.OutlinableDrawingMode"/> to render the outlinable.
-        /// </summary>
+        public bool ComplexMaskingEnabled
+        {
+            get
+            {
+                return complexMaskingMode != ComplexMaskingMode.None;
+            }
+        }
+
         public OutlinableDrawingMode DrawingMode
         {
-            get => drawingMode;
-            set => drawingMode = value;
+            get
+            {
+                return drawingMode;
+            }
+
+            set
+            {
+                drawingMode = value;
+            }
         }
 
-        /// <summary>
-        /// The layer of the outlinable.
-        /// </summary>
         public int OutlineLayer
         {
-            get => outlineLayer;
-            set => outlineLayer = value;
+            get
+            {
+                return outlineLayer;
+            }
+
+            set
+            {
+                outlineLayer = value;
+            }
         }
 
-        /// <summary>
-        /// The list of the outline targets of the outlinable.
-        /// <br/>Note that it's immutable. To manage the targets, please use:
-        /// <br/><see cref="EPOOutline.Outlinable.AddRenderer"/>
-        /// <br/><see cref="EPOOutline.Outlinable.AddTarget"/>
-        /// <br/><see cref="EPOOutline.Outlinable.RemoveTarget"/>
-        /// </summary>
-        public IReadOnlyList<OutlineTarget> OutlineTargets => outlineTargets;
+        public IReadOnlyList<OutlineTarget> OutlineTargets
+        {
+            get
+            {
+                return outlineTargets;
+            }
+        }
 
-        /// <summary>
-        /// The parameters of the outline that are used when <see cref="EPOOutline.Outlinable.RenderStyle"/> is set to <see cref="EPOOutline.RenderStyle.Single"/>.
-        /// </summary>
-        public OutlineProperties OutlineParameters => outlineParameters;
+        public OutlineProperties OutlineParameters
+        {
+            get
+            {
+                return outlineParameters;
+            }
+        }
 
-        /// <summary>
-        /// The parameters of the outline that are used for the front rendering when <see cref="EPOOutline.Outlinable.RenderStyle"/> is set to <see cref="EPOOutline.RenderStyle.FrontBack"/>.
-        /// </summary>
-        public OutlineProperties FrontParameters => frontParameters;
-
-        /// <summary>
-        /// The parameters of the outline that are used for the back rendering when <see cref="EPOOutline.Outlinable.RenderStyle"/> is set to <see cref="EPOOutline.RenderStyle.FrontBack"/>.
-        /// </summary>
-        public OutlineProperties BackParameters => backParameters;
-
-        internal bool NeedsFillMask
+        public OutlineProperties BackParameters
+        {
+            get
+            {
+                return backParameters;
+            }
+        }
+        
+        public bool NeedFillMask
         {
             get
             {
                 if ((drawingMode & OutlinableDrawingMode.Normal) == 0)
                     return false;
 
-                if (renderStyle != RenderStyle.FrontBack) 
+                if (renderStyle == RenderStyle.FrontBack)
+                    return (frontParameters.Enabled || backParameters.Enabled) && (frontParameters.FillPass.Material != null || backParameters.FillPass.Material != null);
+                else
                     return false;
-                
-                return (frontParameters.Enabled || backParameters.Enabled) && (frontParameters.FillPass.Material != null || backParameters.FillPass.Material != null);
-
             }
         }
 
-        /// <summary>
-        /// Adds renderer with all its sub-meshes to the targets list.
-        /// </summary>
-        /// <param name="rendererToAdd">The renderer to be added to the list.</param>
-        /// <param name="targetProvider">The optional function that provides the <see cref="EPOOutline.OutlineTarget"/> in case if some configuration is needed</param>
-        public void AddRenderer(Renderer rendererToAdd, OutlineTargetProvider targetProvider = null)
+        public OutlineProperties FrontParameters
         {
-            var submeshCount = RendererUtility.GetSubmeshCount(rendererToAdd);
-            for (var index = 0; index < submeshCount; index++)
+            get
             {
-                var target = targetProvider == null
-                    ? new OutlineTarget(rendererToAdd, index)
-                    : targetProvider(rendererToAdd, index);
-                
-                AddTarget(target);
+                return frontParameters;
             }
         }
 
-        [Obsolete("It's obsolete and will be removed. Use AddTarget instead")]
-        public void TryAddTarget(OutlineTarget target)
+        public bool IsObstacle
         {
-            AddTarget(target);
+            get
+            {
+                return (drawingMode & OutlinableDrawingMode.Obstacle) != 0;
+            }
         }
-        
-        /// <summary>
-        /// Adds <see cref="EPOOutline.OutlineTarget"/> to the list of targets.
-        /// </summary>
-        /// <param name="target">The target to add to the list.</param>
-        public void AddTarget(OutlineTarget target)
+
+        public bool TryAddTarget(OutlineTarget target)
         {
             outlineTargets.Add(target);
             ValidateTargets();
+
+            return true;
         }
 
-        /// <summary>
-        /// Removes <see cref="EPOOutline.OutlineTarget"/> from the list of targets.
-        /// </summary>
-        /// <param name="target">The target to remove.</param>
         public void RemoveTarget(OutlineTarget target)
         {
             outlineTargets.Remove(target);
@@ -167,13 +305,12 @@ namespace EPOOutline
             }
         }
         
-        /// <summary>
-        /// Gets or sets the <see cref="EPOOutline.OutlineTarget"/> at the specific index.
-        /// </summary>
-        /// <param name="index">The index to get or set the target to/from.</param>
         public OutlineTarget this[int index]
         {
-            get => outlineTargets[index];
+            get
+            {
+                return outlineTargets[index];
+            }
 
             set
             {
@@ -181,11 +318,6 @@ namespace EPOOutline
                 ValidateTargets();
             }
         }
-
-        /// <summary>
-        /// Provides the outline targets count.
-        /// </summary>
-        public int OutlineTargetsCount => outlineTargets.Count;
 
         private void Reset()
         {
@@ -225,11 +357,8 @@ namespace EPOOutline
             }
 
             outlineTargets.RemoveAll(x => x.renderer == null);
-            for (var index = 0; index < OutlineTargets.Count; index++)
-            {
-                var target = OutlineTargets[index];
+            foreach (var target in OutlineTargets)
                 target.IsVisible = target.renderer.isVisible;
-            }
 
             outlineTargets.RemoveAll(x => x.renderer == null);
 
@@ -272,29 +401,35 @@ namespace EPOOutline
             outlinables.Remove(this);
         }
         
-        public static void GetAllActiveOutlinables(List<Outlinable> outlinablesList)
+        public static void GetAllActiveOutlinables(Camera camera, List<Outlinable> outlinablesList)
         {
             outlinablesList.Clear();
             foreach (var outlinable in outlinables)
                 outlinablesList.Add(outlinable);
         }
 
-        /// <summary>
-        /// Adds all child renderers to the rendering list of the outlinable.
-        /// </summary>
-        /// <param name="renderersAddingMode"><see cref="EPOOutline.RenderersAddingMode"/> that will be used during the adding process.</param>
+        private int GetSubmeshCount(Renderer renderer)
+        {
+            if (renderer is MeshRenderer)
+                return renderer.GetComponent<MeshFilter>().sharedMesh.subMeshCount;
+            else if (renderer is SkinnedMeshRenderer)
+                return (renderer as SkinnedMeshRenderer).sharedMesh.subMeshCount;
+            else
+                return 1;
+        }
+
         public void AddAllChildRenderersToRenderingList(RenderersAddingMode renderersAddingMode = RenderersAddingMode.All)
         {
             outlineTargets.Clear();
             var renderers = GetComponentsInChildren<Renderer>(true);
-            foreach (var rendererToAdd in renderers)
+            foreach (var renderer in renderers)
             {
-                if (!MatchingMode(rendererToAdd, renderersAddingMode))
+                if (!MatchingMode(renderer, renderersAddingMode))
                     continue;
 
-                var submeshesCount = RendererUtility.GetSubmeshCount(rendererToAdd);
+                var submeshesCount = GetSubmeshCount(renderer);
                 for (var index = 0; index < submeshesCount; index++)
-                    AddTarget(new OutlineTarget(rendererToAdd, index));
+                    TryAddTarget(new OutlineTarget(renderer, index));
             }
         }
 
@@ -307,13 +442,13 @@ namespace EPOOutline
             ValidateTargets();
         }
 
-        private bool MatchingMode(Renderer rendererToMatch, RenderersAddingMode mode)
+        private bool MatchingMode(Renderer renderer, RenderersAddingMode mode)
         {
             return 
-                (!(rendererToMatch is MeshRenderer) && !(rendererToMatch is SkinnedMeshRenderer) && !(rendererToMatch is SpriteRenderer) && (mode & RenderersAddingMode.Others) != RenderersAddingMode.None) ||
-                (rendererToMatch is MeshRenderer && (mode & RenderersAddingMode.MeshRenderer) != RenderersAddingMode.None) ||
-                (rendererToMatch is SpriteRenderer && (mode & RenderersAddingMode.SpriteRenderer) != RenderersAddingMode.None) ||
-                (rendererToMatch is SkinnedMeshRenderer && (mode & RenderersAddingMode.SkinnedMeshRenderer) != RenderersAddingMode.None);
+                (!(renderer is MeshRenderer) && !(renderer is SkinnedMeshRenderer) && !(renderer is SpriteRenderer) && (mode & RenderersAddingMode.Others) != RenderersAddingMode.None) ||
+                (renderer is MeshRenderer && (mode & RenderersAddingMode.MeshRenderer) != RenderersAddingMode.None) ||
+                (renderer is SpriteRenderer && (mode & RenderersAddingMode.SpriteRenderer) != RenderersAddingMode.None) ||
+                (renderer is SkinnedMeshRenderer && (mode & RenderersAddingMode.SkinnedMeshRenderer) != RenderersAddingMode.None);
         }
 
 #if UNITY_EDITOR
@@ -321,29 +456,20 @@ namespace EPOOutline
         {
             foreach (var target in outlineTargets)
             {
-                if (target.Renderer == null)
-                    continue;
-                
-                if (target.BoundsMode != BoundsMode.Manual)
+                if (target.Renderer == null || target.BoundsMode != BoundsMode.Manual)
                     continue;
 
-                var bounds = target.BoundsMode != BoundsMode.Manual ? target.Renderer.bounds : target.Bounds;
-                
                 Gizmos.matrix = target.Renderer.transform.localToWorldMatrix;
 
                 Gizmos.color = new Color(1.0f, 0.5f, 0.0f, 0.2f);
-                var size = bounds.size;
+                var size = target.Bounds.size;
+                var scale = target.Renderer.transform.localScale;
+                size.x /= scale.x;
+                size.y /= scale.y;
+                size.z /= scale.z;
 
-                if (target.BoundsMode == BoundsMode.Manual)
-                {
-                    var scale = target.Renderer.transform.localScale;
-                    size.x /= scale.x;
-                    size.y /= scale.y;
-                    size.z /= scale.z;
-                }
-
-                Gizmos.DrawCube(bounds.center, size);
-                Gizmos.DrawWireCube(bounds.center, size);
+                Gizmos.DrawCube(target.Bounds.center, size);
+                Gizmos.DrawWireCube(target.Bounds.center, size);
             }
         }
 #endif

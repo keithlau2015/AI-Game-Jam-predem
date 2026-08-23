@@ -23,6 +23,13 @@ namespace EPOOutline
 
             NewLine(ref drawingPosition);
 
+            //var style = property.FindPropertyRelative("outlineRenderingPass");
+            //var styleHeight = EditorGUI.GetPropertyHeight(style);
+            //var propertyDrawingPosition = drawingPosition;
+            //EditorGUI.PropertyField(propertyDrawingPosition, style);
+
+            //drawingPosition.y += styleHeight + EditorGUIUtility.standardVerticalSpacing;
+
             var infoPosition = drawingPosition;
             infoPosition.height = EditorGUIUtility.singleLineHeight * 3.0f + EditorGUIUtility.standardVerticalSpacing * 2.0f;
             EditorGUI.HelpBox(infoPosition, "Changing dilate and blur settings will enable info buffer which will increase draw calls and will have some performance impact. Use Outliner settings if you don't need per object settings.", MessageType.Warning);

@@ -46,6 +46,8 @@
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
 
+				PostprocessCoords
+
 				ComputeSmoothScreenShift;
 
                 FixDepth

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-#if EPO_DOTWEEN && false // MODULE_MARKER
+#if EPO_DOTWEEN // MODULE_MARKER
 
 using EPOOutline;
 using DG.Tweening.Plugins.Options;

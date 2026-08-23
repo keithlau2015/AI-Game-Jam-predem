@@ -53,6 +53,8 @@
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
 
+				PostprocessCoords
+
                 FixDepth
 				TRANSFORM_CUTOUT
 

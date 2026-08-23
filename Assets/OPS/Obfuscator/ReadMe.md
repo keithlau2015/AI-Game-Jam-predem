@@ -10,7 +10,7 @@ The very first step is to get either [Obfuscator Free](https://assetstore.unity.
 
 The main difference between these 3 versions are that the Free version does not support MonoBehavior class and, in general, namespace obfuscation. The security functions are also not available. The Pro version contains all functions. While the source version additionally contains the source code of the obfuscator itself.
 
-The Obfuscator project structure 'Assets/OPS/Obfuscator' will look like the following.
+The Obfuscator project structure 'Assets/GUPS/Obfuscator' will look like the following.
 
 You find the following directories and files in the root directory of Obfuscator:
 - **Editor:** Contains all resources and sources for the editor.
@@ -63,7 +63,7 @@ To run automatically inside the Unity build pipeline, the Obfuscator uses multip
 - **IUnityLinkerProcessor:** A interface used to receive a callback related to the running of UnityLinker. During this phase, the Obfuscator ensures the compatibility to IL2CPP.
 - **IPostprocessBuildWithReport:** A interface used to receive a callback after the build is complete. During this phase, the Obfuscator obfuscates assets that got not obfuscated in prior.
 
-The hooks can be found in the *BuildPostProcessor.cs* file at *Assets/OPS/Obfuscator/Editor*. If you use custom hooks or use assets that use pipeline hooks, have a look at the *callbackOrder* and make sure the Obfuscator runs last.
+The hooks can be found in the *BuildPostProcessor.cs* file at *Assets/GUPS/Obfuscator/Editor*. If you use custom hooks or use assets that use pipeline hooks, have a look at the *callbackOrder* and make sure the Obfuscator runs last.
 
 ```cs
 public int callbackOrder
@@ -74,7 +74,7 @@ public int callbackOrder
 
 ## Step 3 - Setup Settings
 
-Obfuscator has a centralized configuration which applies to the obfuscation pipeline. You can find it at *OPS -> Obfuscator -> Settings*.
+Obfuscator has a centralized configuration which applies to the obfuscation pipeline. You can find it at *Project Settings -> GuardingPearSoftware -> Obfuscator -> Settings*.
 
 The obfuscation settings separate into 4 topics:
 - **Obfuscation:** General settings for code obfuscation. This includes specifications for which assemblies are to be obfuscated, as well as detailed instructions for the obfuscation of their respective classes and members.

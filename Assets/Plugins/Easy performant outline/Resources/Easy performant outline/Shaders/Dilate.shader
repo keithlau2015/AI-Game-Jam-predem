@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: upgraded instancing buffer 'Properies' to new syntax.
-
-Shader "Hidden/Dilate"
+﻿Shader "Hidden/Dilate"
 {
     SubShader
     {
@@ -68,10 +66,6 @@ Shader "Hidden/Dilate"
 
 			DefineCoords
 
-            UNITY_INSTANCING_BUFFER_START (Properties)
-            UNITY_DEFINE_INSTANCED_PROP (float4x4, _NormalMatrices)
-            UNITY_INSTANCING_BUFFER_END(Properties)
-
             v2f vert (appdata v)
             {
                 v2f o;
@@ -79,8 +73,10 @@ Shader "Hidden/Dilate"
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_OUTPUT(v2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-
+				
                 o.vertex = UnityObjectToClipPos(v.vertex);
+
+				PostprocessCoords
 
                 ComputeScreenShift
 					
@@ -95,6 +91,10 @@ Shader "Hidden/Dilate"
 #endif
 				
 				CheckY
+
+#if UNITY_UV_STARTS_AT_TOP
+				ModifyUV
+#endif
                 
                 return o;
             }
@@ -108,23 +108,23 @@ Shader "Hidden/Dilate"
 			{
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-				float2 uv = (i.uv.xy / i.uv.w);
+				half2 uv = i.uv.xy / i.uv.w;
 
-                float2 baseShift = _Shift;
+                half2 baseShift = _Shift;
 				
 #if USE_INFO_BUFFER
-                float4 info = FetchTexelAtFrom(_InfoBuffer, uv, _InfoBuffer_ST);
+                half4 info = FetchTexelAtFrom(_InfoBuffer, uv, _InfoBuffer_ST);
 
-                float2 texelShift = baseShift * info.r;
+                half2 texelShift = baseShift * info.r;
 #else
-				float2 texelShift = baseShift;
+				half2 texelShift = baseShift;
 #endif
 
 #if INFO_BUFFER_STAGE
-				float2 shiftByTexelSize = _Shift * _MainTex_TexelSize;
-				float4 plus = FetchTexelAtWithShift(uv, +shiftByTexelSize);
-				float4 minus = FetchTexelAtWithShift(uv, -shiftByTexelSize);
-				float4 center = FetchTexelAt(uv);
+				half2 shiftByTexelSize = _Shift * _MainTex_TexelSize;
+				half4 plus = FetchTexelAtWithShift(uv, +shiftByTexelSize);
+				half4 minus = FetchTexelAtWithShift(uv, -shiftByTexelSize);
+				half4 center = FetchTexelAt(uv);
 
 				return average(average(center, float4(plus.xy, center.zw)), float4(minus.xy, center.zw));
 #endif

@@ -1,33 +1,13 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 
 namespace EPOOutline
 {
-    public static class XRUtility
-    {
-        public static bool IsXRActive =>
-            UnityEngine.XR.XRSettings.enabled &&
-            UnityEngine.XR.XRSettings.isDeviceActive;
-
-        public static RenderTextureDescriptor VRRenderTextureDescriptor => UnityEngine.XR.XRSettings.eyeTextureDesc;
-
-        public static bool IsUsingVR(OutlineParameters parameters)
-        {
-            return IsXRActive &&
-                   !parameters.IsEditorCamera &&
-                   parameters.EyeMask != StereoTargetEyeMask.None;
-        }
-    }
-    
     public static class RenderTargetUtility
     {
         private static RenderTextureFormat? hdrFormat = null;
 
-        public static RenderTextureFormat GetRTFormat(bool useHDR) =>
-            useHDR ? GetHDRTextureFormat() : RenderTextureFormat.ARGB32;
-        
         public static int GetDepthSliceForEye(StereoTargetEyeMask mask)
         {
             switch (mask)
@@ -47,10 +27,12 @@ namespace EPOOutline
         public struct RenderTextureInfo
         {
             public readonly RenderTextureDescriptor Descriptor;
+            public readonly FilterMode FilterMode;
 
-            public RenderTextureInfo(RenderTextureDescriptor descriptor)
+            public RenderTextureInfo(RenderTextureDescriptor descriptor, FilterMode filterMode)
             {
                 Descriptor = descriptor;
+                FilterMode = filterMode;
             }
         }
 
@@ -58,84 +40,54 @@ namespace EPOOutline
         {
             return new RenderTargetIdentifier(target, 0, CubemapFace.Unknown, GetDepthSliceForEye(parameters.EyeMask));
         }
-        
-        public static RenderTextureInfo GetTargetInfo(OutlineParameters parameters, int width, int height)
-        {
-            var rtFormat = GetRTFormat(parameters.UseHDR);
 
-            if (XRUtility.IsUsingVR(parameters))
+        public static bool IsUsingVR(OutlineParameters parameters)
+        {
+            return UnityEngine.XR.XRSettings.enabled
+                && !parameters.IsEditorCamera
+                && parameters.EyeMask != StereoTargetEyeMask.None;
+        }
+
+        public static RenderTextureInfo GetTargetInfo(OutlineParameters parameters, int width, int height, int depthBuffer, bool forceNoAA, bool noFiltering)
+        {
+            var filterType = noFiltering ? FilterMode.Point : FilterMode.Bilinear;
+            var rtFormat = parameters.UseHDR ? GetHDRFormat() : RenderTextureFormat.ARGB32;
+
+            if (IsUsingVR(parameters))
             {
                 var descriptor = UnityEngine.XR.XRSettings.eyeTextureDesc;
                 descriptor.colorFormat = rtFormat;
                 descriptor.width = width;
                 descriptor.height = height;
-                descriptor.depthBufferBits = 0;
-                descriptor.msaaSamples = Mathf.Max(parameters.Antialiasing, 1);
+                descriptor.depthBufferBits = depthBuffer;
+                descriptor.msaaSamples = forceNoAA ? 1 : Mathf.Max(parameters.Antialiasing, 1);
 
                 var eyesCount = parameters.EyeMask == StereoTargetEyeMask.Both ? VRTextureUsage.TwoEyes : VRTextureUsage.OneEye;
                 descriptor.vrUsage = eyesCount;
 
-                return new RenderTextureInfo(descriptor);
+                return new RenderTextureInfo(descriptor, filterType);
             }
             else
             {
-                var descriptor = new RenderTextureDescriptor(width, height, rtFormat, 0);
+                var descriptor = new RenderTextureDescriptor(width, height, rtFormat, depthBuffer);
                 descriptor.dimension = TextureDimension.Tex2D;
-                descriptor.msaaSamples = Mathf.Max(parameters.Antialiasing, 1);
+                descriptor.msaaSamples = forceNoAA ? 1 : Mathf.Max(parameters.Antialiasing, 1);
 
-                return new RenderTextureInfo(descriptor);
+                return new RenderTextureInfo(descriptor, filterType);
             }
         }
 
-        public static RTHandle GetRT(OutlineParameters parameters, int width, int height, string name)
+        public static void GetTemporaryRT(OutlineParameters parameters, int id, int width, int height, int depthBuffer, bool clear, bool forceNoAA, bool noFiltering)
         {
-            var info = GetTargetInfo(parameters, width, height);
+            var info = GetTargetInfo(parameters, width, height, depthBuffer, forceNoAA, noFiltering);
 
-#if UNITY_6000_0_OR_NEWER
-            var result = OutlineEffect.HandleSystem.Alloc(width, height,
-                colorFormat: info.Descriptor.graphicsFormat,
-                wrapMode: TextureWrapMode.Clamp,
-                slices: info.Descriptor.volumeDepth,
-                filterMode: FilterMode.Bilinear,
-                dimension: info.Descriptor.dimension,
-                enableRandomWrite: info.Descriptor.enableRandomWrite,
-                useMipMap: info.Descriptor.useMipMap,
-                autoGenerateMips: info.Descriptor.autoGenerateMips,
-                msaaSamples: (MSAASamples)info.Descriptor.msaaSamples,
-                bindTextureMS: info.Descriptor.bindMS,
-                useDynamicScale: info.Descriptor.useDynamicScale,
-                useDynamicScaleExplicit: info.Descriptor.useDynamicScaleExplicit,
-                memoryless: info.Descriptor.memoryless,
-                vrUsage: info.Descriptor.vrUsage,
-                name: name);
-#else
-            var result = OutlineEffect.HandleSystem.Alloc(width, height,
-                info.Descriptor.volumeDepth,
-                0,
-                info.Descriptor.graphicsFormat,
-                FilterMode.Bilinear,
-                TextureWrapMode.Clamp,
-                info.Descriptor.dimension,
-                info.Descriptor.enableRandomWrite,
-                info.Descriptor.useMipMap,
-                info.Descriptor.autoGenerateMips,
-                false,
-                1,
-                0.0f,
-                (MSAASamples)info.Descriptor.msaaSamples,
-                info.Descriptor.bindMS,
-                info.Descriptor.useDynamicScale,
-                info.Descriptor.memoryless,
-#if UNITY_2022_1_OR_NEWER
-                info.Descriptor.vrUsage,
-#endif
-                name);
-#endif
-            
-            return result;
+            parameters.Buffer.GetTemporaryRT(id, info.Descriptor, info.FilterMode);
+            parameters.Buffer.SetRenderTarget(RenderTargetUtility.ComposeTarget(parameters, id));
+            if (clear)
+                parameters.Buffer.ClearRenderTarget(true, true, Color.clear);
         }
 
-        public static RenderTextureFormat GetHDRTextureFormat()
+        private static RenderTextureFormat GetHDRFormat()
         {
             if (hdrFormat.HasValue)
                 return hdrFormat.Value;
@@ -150,11 +102,6 @@ namespace EPOOutline
                 hdrFormat = RenderTextureFormat.ARGB32;
 
             return hdrFormat.Value;
-        }
-
-        public static GraphicsFormat GetHDRGraphicsFormat()
-        {
-            return GraphicsFormatUtility.GetGraphicsFormat(GetHDRTextureFormat(), RenderTextureReadWrite.Default);
         }
     }
 }

@@ -61,6 +61,18 @@
           "Key" : "Skip_Photon",
           "Value" : "True",
           "Values" : null
+        },
+        {
+          "Type" : "Bool",
+          "Key" : "Skip_Photon_Fusion_Assemblies",
+          "Value" : "True",
+          "Values" : null
+        },
+        {
+          "Type" : "Bool",
+          "Key" : "Skip_Photon_Quantum_Assemblies",
+          "Value" : "True",
+          "Values" : null
         }
       ]
     },
@@ -157,6 +169,14 @@
     {
       "Settings_Name" : "Default_Obfuscation_Component_Namespace",
       "SettingElement_Array" : [
+        {
+          "Type" : "Array_String",
+          "Key" : "Skip_Namespace_Array",
+          "Value" : null,
+          "Values" : [
+            "Model"
+          ]
+        }
       ]
     },
     {
@@ -390,6 +410,13 @@
     {
       "Settings_Name" : "Default_Obfuscation_Component_Custom_Attributes",
       "SettingElement_Array" : [
+        {
+          "Type" : "Array_String",
+          "Key" : "Attributes_Behave_Like_DoNotRename_Array",
+          "Value" : null,
+          "Values" : [
+          ]
+        }
       ]
     },
     {
@@ -527,9 +554,14 @@
           "Values" : null
         }
       ]
+    },
+    {
+      "Settings_Name" : "Default_Obfuscation_Component_SignAssembly",
+      "SettingElement_Array" : [
+      ]
     }
   ],
-  "Version" : "5.7.0",
+  "Version" : "5.1.0",
   "SettingElement_Array" : [
     {
       "Type" : "Bool",

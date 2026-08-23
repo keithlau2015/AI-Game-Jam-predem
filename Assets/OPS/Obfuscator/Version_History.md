@@ -1,5 +1,70 @@
 ﻿# Version History:
 
+## 2026.1.1: Maintenance - Update
+Improvements:
+- [Imprv-2026-1] Scenes must be added to the build settings to be included in the obfuscator analysis. Unanalyzed scenes can lead to incorrectly functioning UI events (or similiar). Now, a warning is displayed if a scene is skipped when it is opened in the editor but is not included in the build settings [thanks Jiyong].
+
+Bug Fixes:
+- [Bug-2026-3] When a Unity event referenced a Unity script (e.g., MonoBehaviors), the reference was lost [thanks Joe].
+- [Bug-2026-2] Another problem with WebGL builds has been fixed, where some MonoBehaviour references were not being obfuscated correctly [thanks Angel].
+- [Bug-2026-1] There was a problem when loading assets that had missing references (it looks like *Broken text PPtr in file(Assets/.../Player.controller). Local file identifier (1115794168221349032) doesn't exist!*), which caused the obfuscation process to abort. This was not correct; the error is now displayed as a warning. But you might have to look into that, because the error means that some references no longer exist on your asset [thanks Damian].
+
+## 2026.1: Web - Update
+The obfuscator now requires NetStandard 2.1 as a minimum requirement.
+
+Bug Fixes:
+- [Bug-2025-8] There was a major issue where references to assets in web builds were not processed correctly. This resulted in MonoBehaviour failing to load.
+
+## 2025.4: Attributes - Update
+Features:
+- [Feature-2025-11] Removes various Unity-specific attributes from assemblies after obfuscation, thereby removing metadata that is only relevant in the Unity Editor and allows conclusions to be drawn about the code.
+
+## 2025.3: Custom Obfuscation - Update
+Features:
+- [Feature-2025-10] Assemblies (.dll files) can now be obfuscated outside of a Unity build. To do this, open the `Windows -> GuardingPearSoftware -> Obfuscator -> Obfuscate` window. This allows you to obfuscate assemblies of assets that you want to publish in the Asset Store or elsewhere, for example.
+
+Improvements:
+- [Imprv-2025-5] Placed the editor code under `GUPS\Editor\Source` in a custom editor assembly definition, to prevent runtime loading [thanks Champi67].
+
+## 2025.2: Security - Update
+Features:
+- [Feature-2025-9] Support for signing assemblies has been added. You can now sign your Mono assemblies with a strong name (RSA private key) to uniquely identify the origin of your code! The added component can be found under the *Security* tab and is called `Sign Assembly`.
+- [Feature-2025-8] The `Anti Tampering` component has been completely redesigned to meet modern security challenges and got renamed to `Code Integrity Check`. It is also now out of beta!
+
+## 2025.1
+The Obfuscator now follows a yearly versioning system, just like all the other GuardingPearSoftware assets. Along with that, the directory and base namespace have changed. You can now find the Obfuscator under **Assets/GUPS/Obfuscator**, and the namespace is now **GUPS** instead of **OPS**.
+
+We also moved the Obfuscator settings to the **Project Settings**, so you can now access them here:
+**Project Settings -> GuardingPearSoftware -> Obfuscator**
+
+Similarly, the deobfuscation stack trace has a new location:
+**Windows -> GuardingPearSoftware -> Obfuscator -> Error-Stack-Trace**
+
+You might be wondering why all these changes happened. That’s a fair question! A few years ago, the company rebranded from OrangePearSoftware (OPS) to GuardingPearSoftware (GUPS). Back then, I focused on bug fixes and adding features to the Obfuscator and didn’t have time to update the naming and structure. But now, we’ve finally made it happen.
+
+Here’s what this means for you:
+
+- **Obfuscator Settings:** `Project Settings -> GuardingPearSoftware -> Obfuscator`
+- **Deobfuscation Window:** `Windows -> GuardingPearSoftware -> Obfuscator -> Error-Stack-Trace`
+- **Obfuscator Attributes:** If you’re using them, replace `OPS` with `GUPS`. Usually, a simple project-wide replacement from `OPS.Obfuscator.Attribute` to `GUPS.Obfuscator.Attribute` will do the trick.
+
+**Updating from a previous version:**
+
+Before you update, make sure to back up your **Obfuscator Settings File**. You can find it here:
+`Assets/OPS/Obfuscator/Settings/Obfuscator_Settings.json`
+
+Next, delete the current `Assets/OPS` directory.
+
+Then, install the new Obfuscator and move your settings file to the new location:
+`Assets/GUPS/Obfuscator/Settings/Obfuscator_Settings.json`
+
+If you have any questions, just ask. I’m always happy to help!
+
+## 5.7.1: Photon - Update
+Improvements:
+- [Imprv-2025-4] The enabled compression Lz4/Lz4HC will now be read from the build report. Fixing an issue when building with a custom build pipeline and the right compression was not detected [thanks Pieter].
+- [Imprv-2025-3] Added support for Photon Fusion and Quantum. The compatibility can be managed in the Obfuscator-Settings->Compatibility->Photon [thanks Pieter & Chris].
+
 ## 5.7.0: Unity 6 - Update
 This update includes full support for the Unity 6 Editor.
 
@@ -8,7 +73,7 @@ Features:
 - [Feature-2025-7] Support of DOTween (HOTween v2) from Demigiant package [thanks Joshua].
 
 Improvements:
-[Imprv-2025-2] Skip the proxy implementation of Java/Android classes from the obfuscation, e.g. “UnityEngine.AndroidJavaProxy”.
+- [Imprv-2025-2] Skip the proxy implementation of Java/Android classes from the obfuscation, e.g. “UnityEngine.AndroidJavaProxy”.
 
 Bug Fixes:
 - [Bug-2025-7] When obfuscating addressable files, in some cases the entry data of the catalog file also had to be updated if the size of the checksum changed.

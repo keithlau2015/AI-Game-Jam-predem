@@ -1,7 +1,7 @@
 ﻿// System
 using System;
 
-namespace OPS.Obfuscator.Attribute
+namespace GUPS.Obfuscator.Attribute
 {
     /// <summary>
     /// Add this to class members to obfuscate them anyway with a new name '_ObfuscateTo', although the settings did not allow to.

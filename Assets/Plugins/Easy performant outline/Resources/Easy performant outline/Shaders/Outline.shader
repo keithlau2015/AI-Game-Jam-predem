@@ -74,6 +74,8 @@
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
 
+				PostprocessCoords
+
 #if USE_INFO_BUFFER
 				o.screenUV = ComputeScreenPos(o.vertex);
 #endif

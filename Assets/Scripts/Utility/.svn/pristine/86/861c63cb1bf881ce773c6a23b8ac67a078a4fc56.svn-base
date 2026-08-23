@@ -1,5 +1,0 @@
-public interface IPreviousablePanel
-{
-    void Show();
-    void Hide();
-}

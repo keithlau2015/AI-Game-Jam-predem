@@ -47,10 +47,6 @@
 
 			DefineCoords
 
-            UNITY_INSTANCING_BUFFER_START (Properties)
-            UNITY_DEFINE_INSTANCED_PROP (float4x4, _NormalMatrices)
-            UNITY_INSTANCING_BUFFER_END(Properties)
-
             v2f vert (appdata v)
             {
                 v2f o;
@@ -61,8 +57,12 @@
 				
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 
+				PostprocessCoords
+
                 ComputeScreenShift
                 
+                o.uv = ComputeScreenPos(o.vertex);
+
                 return o;
             }
 
@@ -70,7 +70,7 @@
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                return fixed4(1, 0, 1, 1);
+                return fixed4(0, 0, 0, 0);
             }
             ENDCG
         }

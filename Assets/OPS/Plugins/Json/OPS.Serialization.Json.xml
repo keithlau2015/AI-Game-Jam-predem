@@ -4,6 +4,28 @@
         <name>OPS.Serialization.Json</name>
     </assembly>
     <members>
+        <member name="T:OPS.Serialization.Json.Attributes.CustomJsonSerializationMethodAttribute">
+            <summary>
+            Assign to a method, with JsonObject as return type, so this will be callen to serialize to json instead of default deserialization.
+            </summary>
+        </member>
+        <member name="T:OPS.Serialization.Json.Attributes.CustomJsonDeserializationMethodAttribute">
+            <summary>
+            Assign to a method, with a single JsonObject as input parameter, so this will be callen to deserialize the json instead of default deserialization.
+            </summary>
+        </member>
+        <member name="T:OPS.Serialization.Json.Attributes.JsonObjectAttribute">
+            <summary>
+            Assign to a class to mark it as json serializable.
+            If you do so, only public fields and public properties with a JsonProperty attribute will be serialized.
+            </summary>
+        </member>
+        <member name="T:OPS.Serialization.Json.Attributes.PostJsonDeserializationMethodAttribute">
+            <summary>
+            Assign to a method, so this will be callen post json deserialization.
+            You can modify fields or properties after they got deserialized.
+            </summary>
+        </member>
         <member name="T:OPS.Serialization.Json.Attributes.JsonPropertyAttribute">
             <summary>
             Assign to a public field or public property to mark it as json serializable.
@@ -15,32 +37,10 @@
             Custom name stored to and loaded from.
             </summary>
         </member>
-        <member name="T:OPS.Serialization.Json.Attributes.CustomJsonDeserializationMethodAttribute">
-            <summary>
-            Assign to a method, with a single JsonObject as input parameter, so this will be callen to deserialize the json instead of default deserialization.
-            </summary>
-        </member>
-        <member name="T:OPS.Serialization.Json.Attributes.CustomJsonSerializationMethodAttribute">
-            <summary>
-            Assign to a method, with JsonObject as return type, so this will be callen to serialize to json instead of default deserialization.
-            </summary>
-        </member>
-        <member name="T:OPS.Serialization.Json.Attributes.PostJsonDeserializationMethodAttribute">
-            <summary>
-            Assign to a method, so this will be callen post json deserialization.
-            You can modify fields or properties after they got deserialized.
-            </summary>
-        </member>
         <member name="T:OPS.Serialization.Json.Attributes.PreJsonSerializationMethodAttribute">
             <summary>
             Assign to a method, so this will be callen pre json serialization.
             You can modify fields or properties before they will be serialized.
-            </summary>
-        </member>
-        <member name="T:OPS.Serialization.Json.Attributes.JsonObjectAttribute">
-            <summary>
-            Assign to a class to mark it as json serializable.
-            If you do so, only public fields and public properties with a JsonProperty attribute will be serialized.
             </summary>
         </member>
         <member name="T:OPS.Serialization.Json.Interfaces.ICustomJsonSerializeable">
@@ -76,51 +76,6 @@
             Called on json post deserialization.
             </summary>
             <returns></returns>
-        </member>
-        <member name="T:OPS.Serialization.Json.JsonArray">
-            <summary>
-            Json Array Object.
-            </summary>
-        </member>
-        <member name="T:OPS.Serialization.Json.JsonBool">
-            <summary>
-            Json Boolean Object.
-            </summary>
-        </member>
-        <member name="P:OPS.Serialization.Json.JsonNode.ForceASCII">
-            <summary>
-            Use Unicode by default.
-            </summary>
-        </member>
-        <member name="P:OPS.Serialization.Json.JsonNode.LongAsString">
-            <summary>
-            Use JSONNumber as default.
-            </summary>
-        </member>
-        <member name="P:OPS.Serialization.Json.JsonNode.AllowLineComments">
-            <summary>
-            Allow "//"-style comments at the end of a line.
-            </summary>
-        </member>
-        <member name="T:OPS.Serialization.Json.JsonNull">
-            <summary>
-            Json Null Object.
-            </summary>
-        </member>
-        <member name="T:OPS.Serialization.Json.JsonNumber">
-            <summary>
-            Json Number Object.
-            </summary>
-        </member>
-        <member name="T:OPS.Serialization.Json.JsonObject">
-            <summary>
-            Json Object.
-            </summary>
-        </member>
-        <member name="T:OPS.Serialization.Json.JsonString">
-            <summary>
-            Json String Object.
-            </summary>
         </member>
         <member name="T:OPS.Serialization.Json.JsonSerializer">
             <summary>
@@ -180,6 +135,51 @@
         </member>
         <member name="M:OPS.Serialization.Json.JsonSerializer.Apply``1(System.Collections.Generic.IEnumerable{``0},System.Action{``0})">
             <summary>Applies a function to every element of the list.</summary>
+        </member>
+        <member name="T:OPS.Serialization.Json.JsonNull">
+            <summary>
+            Json Null Object.
+            </summary>
+        </member>
+        <member name="T:OPS.Serialization.Json.JsonArray">
+            <summary>
+            Json Array Object.
+            </summary>
+        </member>
+        <member name="T:OPS.Serialization.Json.JsonBool">
+            <summary>
+            Json Boolean Object.
+            </summary>
+        </member>
+        <member name="P:OPS.Serialization.Json.JsonNode.ForceASCII">
+            <summary>
+            Use Unicode by default.
+            </summary>
+        </member>
+        <member name="P:OPS.Serialization.Json.JsonNode.LongAsString">
+            <summary>
+            Use JSONNumber as default.
+            </summary>
+        </member>
+        <member name="P:OPS.Serialization.Json.JsonNode.AllowLineComments">
+            <summary>
+            Allow "//"-style comments at the end of a line.
+            </summary>
+        </member>
+        <member name="T:OPS.Serialization.Json.JsonObject">
+            <summary>
+            Json Object.
+            </summary>
+        </member>
+        <member name="T:OPS.Serialization.Json.JsonString">
+            <summary>
+            Json String Object.
+            </summary>
+        </member>
+        <member name="T:OPS.Serialization.Json.JsonNumber">
+            <summary>
+            Json Number Object.
+            </summary>
         </member>
     </members>
 </doc>

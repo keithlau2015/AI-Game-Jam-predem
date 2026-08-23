@@ -75,9 +75,10 @@
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
 
+				PostprocessCoords
+
 #if USE_INFO_BUFFER
 				o.screenUV = ComputeScreenPos(o.vertex);
-				o.screenUV.xy *= _Scale;
 #endif
 
                 FixDepth

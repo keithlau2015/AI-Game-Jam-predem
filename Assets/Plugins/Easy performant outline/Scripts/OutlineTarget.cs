@@ -1,57 +1,56 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 
 namespace EPOOutline
 {
-    /// <summary>
-    /// The target to render outline for
-    /// </summary>
+    [Flags]
+    public enum ColorMask
+    {
+        None = 0,
+        R = 1,
+        G = 2,
+        B = 4,
+        A = 8
+    }
+
     [System.Serializable]
     public class OutlineTarget
     {
-        private static List<Material> TempSharedMaterials = new List<Material>();
-        
-        internal bool IsVisible = false;
+        public bool IsVisible = false;
 
-        /// <summary>
-        /// <see cref="EPOOutline.ColorMask"/> to use during the cutout process.
-        /// </summary>
         [SerializeField]
         public ColorMask CutoutMask = ColorMask.A;
 
         [SerializeField]
-        internal Renderer renderer;
+        private float edgeDilateAmount = 5.0f;
 
-        /// <summary>
-        /// Sub-mesh index of the renderer.
-        /// </summary>
+        [SerializeField]
+        private float frontEdgeDilateAmount = 5.0f;
+
+        [SerializeField]
+        private float backEdgeDilateAmount = 5.0f;
+
+        [SerializeField]
+        [FormerlySerializedAs("Renderer")]
+        public Renderer renderer;
+
         [SerializeField]
         public int SubmeshIndex;
 
-        /// <summary>
-        /// <see cref="EPOOutline.BoundsMode"/> to use for this target.
-        /// </summary>
         [SerializeField]
         public BoundsMode BoundsMode = BoundsMode.Default;
 
-        /// <summary>
-        /// Bounds of this target that will be used for rendering.
-        /// <br/>Only applicable if <see cref="EPOOutline.OutlineTarget.BoundsMode"/> is set to <see cref="EPOOutline.BoundsMode.Manual"/>
-        /// </summary>
         [SerializeField]
         public Bounds Bounds = new Bounds(Vector3.zero, Vector3.one);
 
-        /// <summary>
-        /// The threshold for the cutout to be used.
-        /// </summary>
         [SerializeField]
         [Range(0.0f, 1.0f)]
         public float CutoutThreshold = 0.5f;
 
-        /// <summary>
-        /// The <see cref="UnityEngine.Rendering.CullMode"/> to be used for rendering of this target.
-        /// </summary>
         [SerializeField]
         public CullMode CullMode;
 
@@ -59,77 +58,56 @@ namespace EPOOutline
         private string cutoutTextureName;
 
         [SerializeField]
+        public DilateRenderMode DilateRenderingMode;
+
+        [SerializeField]
         private int cutoutTextureIndex;
         
         private int? cutoutTextureId;
         
-        /// <summary>
-        /// The renderer of this outline target.
-        /// </summary>
-        public Renderer Renderer => renderer;
-
-        internal bool UsesCutout => !string.IsNullOrEmpty(cutoutTextureName);
-
-        internal Material SharedMaterial
+        public Renderer Renderer
         {
             get
             {
-                if (renderer == null)
-                    return null;
-                
-                TempSharedMaterials.Clear();
-                renderer.GetSharedMaterials(TempSharedMaterials);
-
-                return TempSharedMaterials.Count == 0 ? 
-                    null :
-                    TempSharedMaterials[ShiftedSubmeshIndex % TempSharedMaterials.Count];
+                return renderer;
             }
         }
 
-        internal Texture CutoutTexture
+        public bool UsesCutout
         {
             get
             {
-                var sharedMaterial = SharedMaterial;
-                return sharedMaterial == null ? 
-                    null : 
-                    sharedMaterial.GetTexture(CutoutTextureId);
+                return !string.IsNullOrEmpty(cutoutTextureName);
             }
         }
 
-        internal bool IsValidForCutout
-        {
-            get
-            {
-                var materialToGetTextureFrom = SharedMaterial;
-                return UsesCutout &&
-                       materialToGetTextureFrom != null &&
-                       materialToGetTextureFrom.HasProperty(CutoutTextureId) &&
-                       CutoutTexture != null;
-            }
-        }
-        
-        /// <summary>
-        /// The cutout texture index. Only applicable if the texture is TexArray.
-        /// </summary>
         public int CutoutTextureIndex
         {
-            get => cutoutTextureIndex;
+            get
+            {
+                return cutoutTextureIndex;
+            }
 
             set
             {
                 cutoutTextureIndex = value;
-                if (cutoutTextureIndex >= 0) 
-                    return;
-                
-                Debug.LogError("Trying to set cutout texture index less than zero");
-                cutoutTextureIndex = 0;
+                if (cutoutTextureIndex < 0)
+                {
+                    Debug.LogError("Trying to set cutout texture index less than zero");
+                    cutoutTextureIndex = 0;
+                }
             }
         }
         
-        internal int ShiftedSubmeshIndex => SubmeshIndex;
+        public int ShiftedSubmeshIndex
+        {
+            get
+            {
+                return SubmeshIndex;
+            }
+        }
 
-        internal int CutoutTextureId
+        public int CutoutTextureId
         {
             get
             {
@@ -140,12 +118,12 @@ namespace EPOOutline
             }
         }
 
-        /// <summary>
-        /// The name of the texture that is going to be used while rendering as a cutout source.
-        /// </summary>
         public string CutoutTextureName
         {
-            get => cutoutTextureName;
+            get
+            {
+                return cutoutTextureName;
+            }
 
             set
             {
@@ -154,16 +132,59 @@ namespace EPOOutline
             }
         }
 
+        public float EdgeDilateAmount
+        {
+            get
+            {
+                return edgeDilateAmount;
+            }
+
+            set
+            {
+                if (value < 0)
+                    edgeDilateAmount = 0;
+                else
+                    edgeDilateAmount = value;
+            }
+        }
+
+        public float FrontEdgeDilateAmount
+        {
+            get
+            {
+                return frontEdgeDilateAmount;
+            }
+
+            set
+            {
+                if (value < 0)
+                    frontEdgeDilateAmount = 0;
+                else
+                    frontEdgeDilateAmount = value;
+            }
+        }
+
+        public float BackEdgeDilateAmount
+        {
+            get
+            {
+                return backEdgeDilateAmount;
+            }
+
+            set
+            {
+                if (value < 0)
+                    backEdgeDilateAmount = 0;
+                else
+                    backEdgeDilateAmount = value;
+            }
+        }
+
         public OutlineTarget()
         {
 
         }
 
-        /// <summary>
-        /// The constructor of the target.
-        /// </summary>
-        /// <param name="renderer">The renderer of the target.</param>
-        /// <param name="submesh">The sub-mesh of the target.</param>
         public OutlineTarget(Renderer renderer, int submesh = 0)
         {
             SubmeshIndex = submesh;
@@ -173,14 +194,12 @@ namespace EPOOutline
             cutoutTextureId = null;
             cutoutTextureName = string.Empty;
             CullMode = renderer is SpriteRenderer ? CullMode.Off : CullMode.Back;
+            DilateRenderingMode = DilateRenderMode.PostProcessing;
+            frontEdgeDilateAmount = 5.0f;
+            backEdgeDilateAmount = 5.0f;
+            edgeDilateAmount = 5.0f;
         }
 
-        /// <summary>
-        /// The constructor of the target.
-        /// </summary>
-        /// <param name="renderer">The renderer of the target.</param>
-        /// <param name="cutoutTextureName">The name of the texture to be used to render the cutout.</param>
-        /// <param name="cutoutThreshold">The cutout threshold.</param>
         public OutlineTarget(Renderer renderer, string cutoutTextureName, float cutoutThreshold = 0.5f)
         {
             SubmeshIndex = 0;
@@ -190,24 +209,10 @@ namespace EPOOutline
             CutoutThreshold = cutoutThreshold;
             this.cutoutTextureName = cutoutTextureName;
             CullMode = renderer is SpriteRenderer ? CullMode.Off : CullMode.Back;
-        }
-        
-        /// <summary>
-        /// The constructor of the target.
-        /// </summary>
-        /// <param name="renderer">The renderer of the target.</param>
-        /// <param name="submeshIndex">The sub-mesh of the target.</param>
-        /// <param name="cutoutTextureName">The name of the texture to be used to render the cutout.</param>
-        /// <param name="cutoutThreshold">The cutout threshold.</param>
-        public OutlineTarget(Renderer renderer, int submeshIndex, string cutoutTextureName, float cutoutThreshold = 0.5f)
-        {
-            SubmeshIndex = submeshIndex;
-            this.renderer = renderer;
-
-            cutoutTextureId = Shader.PropertyToID(cutoutTextureName);
-            CutoutThreshold = cutoutThreshold;
-            this.cutoutTextureName = cutoutTextureName;
-            CullMode = renderer is SpriteRenderer ? CullMode.Off : CullMode.Back;
+            DilateRenderingMode = DilateRenderMode.PostProcessing;
+            frontEdgeDilateAmount = 5.0f;
+            backEdgeDilateAmount = 5.0f;
+            edgeDilateAmount = 5.0f;
         }
     }
 }

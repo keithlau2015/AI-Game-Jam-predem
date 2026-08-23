@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-#if Obfuscator_Free
-#else
-namespace OPS.Obfuscator.Attribute
+namespace GUPS.Obfuscator.Attribute
 {
     /// <summary>
     /// Add this to an Class to skip obfuscation of all Method Bodys, or to an specific Method to skip its Method Body.
@@ -16,4 +11,3 @@ namespace OPS.Obfuscator.Attribute
     {
     }
 }
-#endif

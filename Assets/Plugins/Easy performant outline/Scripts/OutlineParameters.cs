@@ -1,51 +1,68 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
-using Object = UnityEngine.Object;
 
 namespace EPOOutline
 {
-    public class OutlineParameters : IDisposable
+    public class MeshPool
     {
-        public OutlineParameters(CommandBufferWrapper wrapper)
+        private Queue<Mesh> freeMeshes = new Queue<Mesh>();
+
+        private List<Mesh> allMeshes = new List<Mesh>();
+
+        public Mesh AllocateMesh()
         {
-            Buffer = wrapper;
+            while (freeMeshes.Count > 0 && freeMeshes.Peek() == null)
+                freeMeshes.Dequeue();
+
+            if (freeMeshes.Count == 0)
+            {
+                var mesh = new Mesh();
+                mesh.MarkDynamic();
+                allMeshes.Add(mesh);
+                freeMeshes.Enqueue(mesh);
+            }
+
+            return freeMeshes.Dequeue();
         }
 
-        public readonly RTHandlePool RTHandlePool = new RTHandlePool();
-        
+        public void ReleaseAllMeshes()
+        {
+            freeMeshes.Clear();
+            foreach (var mesh in allMeshes)
+                freeMeshes.Enqueue(mesh);
+        }
+    }
+
+    public class OutlineParameters
+    {
         public readonly MeshPool MeshPool = new MeshPool();
 
-        public readonly Handles Handles = new Handles();
-        
         public Camera Camera;
-        public RTHandle Target;
-        public RTHandle DepthTarget;
-        public CommandBufferWrapper Buffer;
+        public RenderTargetIdentifier Target;
+        public RenderTargetIdentifier DepthTarget;
+        public CommandBuffer Buffer;
         public DilateQuality DilateQuality = DilateQuality.Base;
         public int DilateIterations = 2;
         public int BlurIterations = 5;
 
         public Vector2 Scale = Vector2.one;
 
-        public Rect Viewport;
+        public Rect? CustomViewport;
 
         public long OutlineLayerMask = -1;
 
         public int TargetWidth;
         public int TargetHeight;
 
-        public int ScaledBufferWidth;
-        public int ScaledBufferHeight;
-        
         public float BlurShift = 1.0f;
 
         public float DilateShift = 1.0f;
 
         public bool UseHDR;
 
-        public bool UseInfoBuffer;
+        public bool UseInfoBuffer = false;
 
         public bool IsEditorCamera;
 
@@ -66,44 +83,24 @@ namespace EPOOutline
 
         public List<Outlinable> OutlinablesToRender = new List<Outlinable>();
 
-        public readonly Dictionary<Texture, RTHandle> TextureHandleMap = new Dictionary<Texture, RTHandle>();
-
-        public (int ScaledWidth, int ScaledHeight) ScaledSize
+        private bool isInitialized = false;
+        
+        public Vector2Int MakeScaledVector(int x, int y)
         {
-            get
-            {
-                var scaledWidth = TargetWidth;
-                var scaledHeight = TargetHeight;
+            var fx = (float)x;
+            var fy = (float)y;
 
-                switch (PrimaryBufferSizeMode)
-                {
-                    case BufferSizeMode.WidthControlsHeight:
-                        scaledWidth = PrimaryBufferSizeReference;
-                        scaledHeight = (int)((float)PrimaryBufferSizeReference /
-                                             ((float)TargetWidth / (float)TargetHeight));
-                        break;
-                    case BufferSizeMode.HeightControlsWidth:
-                        scaledWidth = (int)((float)PrimaryBufferSizeReference /
-                                            ((float)TargetHeight / (float)TargetWidth));
-                        scaledHeight = PrimaryBufferSizeReference;
-                        break;
-                    case BufferSizeMode.Scaled:
-                        scaledWidth = (int)(TargetWidth * PrimaryBufferScale);
-                        scaledHeight = (int)(TargetHeight * PrimaryBufferScale);
-                        break;
-                }
+            return new Vector2Int(Mathf.FloorToInt(fx * Scale.x), Mathf.FloorToInt(fy * Scale.y));
+        }
 
-                if (EyeMask == StereoTargetEyeMask.None)
-                    return (scaledWidth, scaledHeight);
+        public void CheckInitialization()
+        {
+            if (isInitialized)
+                return;
 
-                if (scaledWidth % 2 != 0)
-                    scaledWidth++;
+            Buffer = new CommandBuffer();
 
-                if (scaledHeight % 2 != 0)
-                    scaledHeight++;
-
-                return (scaledWidth, scaledHeight);
-            }
+            isInitialized = true;
         }
 
         public void Prepare()
@@ -111,7 +108,7 @@ namespace EPOOutline
             if (OutlinablesToRender.Count == 0)
                 return;
             
-            UseInfoBuffer = OutlinablesToRender.Find(x => x != null && ((x.DrawingMode & (OutlinableDrawingMode.Obstacle | OutlinableDrawingMode.Mask)) != 0 || x.ComplexMaskingMode != ComplexMaskingMode.None)) != null;
+            UseInfoBuffer = OutlinablesToRender.Find(x => x != null && ((x.DrawingMode & (OutlinableDrawingMode.Obstacle | OutlinableDrawingMode.Mask)) != 0 || x.ComplexMaskingEnabled)) != null;
             if (UseInfoBuffer)
                 return;
 
@@ -131,25 +128,14 @@ namespace EPOOutline
         private static bool CheckDiffers(Outlinable outlinable)
         {
             if (outlinable.RenderStyle == RenderStyle.Single)
-                return CheckIfNotUnit(outlinable.OutlineParameters);
-            
-            return CheckIfNotUnit(outlinable.FrontParameters) || CheckIfNotUnit(outlinable.BackParameters);
+                return CheckIfNonOne(outlinable.OutlineParameters);
+            else
+                return CheckIfNonOne(outlinable.FrontParameters) || CheckIfNonOne(outlinable.BackParameters);
         }
 
-        private static bool CheckIfNotUnit(Outlinable.OutlineProperties parameters)
+        private static bool CheckIfNonOne(Outlinable.OutlineProperties parameters)
         {
-            return !Mathf.Approximately(parameters.BlurShift, 1.0f) ||
-                   !Mathf.Approximately(parameters.DilateShift, 1.0f);
-        }
-
-        public void Dispose()
-        {
-            if (Buffer is IDisposable disposable)
-                disposable.Dispose();
-            
-            Object.DestroyImmediate(BlitMesh);
-            MeshPool?.Dispose();
-            RTHandlePool?.Dispose();
+            return parameters.BlurShift != 1.0f || parameters.DilateShift != 1.0f;
         }
     }
 }

@@ -10,8 +10,6 @@
 #define FetchTexelAtFrom(tex,uv,texST) UNITY_SAMPLE_SCREENSPACE_TEXTURE(tex,UnityStereoScreenSpaceUVAdjust((uv),(texST)))
 #endif
 
-#define DEFINE_VERTEX_CUTOUT_DATA(i) 
-
 #if USE_INFO_BUFFER
 #define GetMaskingScaler(inUV)
 
@@ -43,7 +41,9 @@ inline float GetScaler(float4 inUV, half4 info)
 
 #define DefineEdgeDilateParameters float3 normal : TEXCOORD6;
 
-#define ComputeScreenShift o.vertex.xy += EPOComputeShift(v.normal, 1.41f * _MainTex_TexelSize.xy * 2.0f * (_EffectSize + v.additionalScale.x) * o.vertex.w, UNITY_ACCESS_INSTANCED_PROP(Properties, _NormalMatrices));
+//#define ComputeScreenShift float2 clipNormal = (mul((float3x3) UNITY_MATRIX_MVP, v.normal)).xy; o.vertex.xy += clipNormal * 1.41f * _MainTex_TexelSize.xy * 2.0f * (_EffectSize + v.additionalScale.x) * o.vertex.w;
+
+#define ComputeScreenShift o.vertex.xy += EPOComputeShift(v.normal, 1.41f * _MainTex_TexelSize.xy * 2.0f * (_EffectSize + v.additionalScale.x) * o.vertex.w);
 
 #define ComputeSmoothScreenShift float2 clipNormal = (mul((float3x3) UNITY_MATRIX_MVP, mul((float3x3) UNITY_MATRIX_M, v.normal))).xy; o.vertex.xy += (normalize(clipNormal) / _ScreenParams.xy) * 2.0f * _DilateShift * o.vertex.w;
 
@@ -51,9 +51,11 @@ inline float GetScaler(float4 inUV, half4 info)
 
 #define DefineCoords float2 _Scale;
 
-inline float2 EPOComputeShift(float3 normal, float2 shiftAmount, float4x4 normalMatrix)
+#define PostprocessCoords// o.vertex.xy = _Scale.xy / 20.0f + (o.vertex.xy + 1.0f) * _Scale.zw - 1.0f;
+
+inline float2 EPOComputeShift(float3 normal, float2 shiftAmount)
 {
-	float2 transformedNormal = mul(mul((float3x3)unity_MatrixVP, (float3x3) normalMatrix), normal).xy;
+	float2 transformedNormal = mul((float3x3) UNITY_MATRIX_MVP, normal).xy;
 	transformedNormal = normalize(transformedNormal);
 
 	return transformedNormal.xy * shiftAmount;
@@ -76,6 +78,8 @@ inline float2 EPOComputeShift(float3 normal, float2 shiftAmount, float4x4 normal
 #else
 #define FixDepth
 #endif
+
+#define ModifyUV //o.uv.y = 1.0f - o.uv.y;
 
 #if USE_CUTOUT
 	#if TEXARRAY_CUTOUT

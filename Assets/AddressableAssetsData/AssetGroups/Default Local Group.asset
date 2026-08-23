@@ -1,0 +1,345 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Default Local Group
+  m_EditorClassIdentifier: 
+  m_GroupName: Default Local Group
+  m_Data:
+    m_SerializedData: []
+  m_GUID: f3f3cb76d2f24fa4c80c59bbab8b2359
+  m_SerializeEntries:
+  - m_GUID: a09c0db710d724e0b94c1a3d7fcae605
+    m_Address: LandingPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 8e554c68e3d3da3418657791ab570efb
+    m_Address: PatchPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 04fe90957823a47f5825e0a38e4689df
+    m_Address: AnnouncementPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 79fc4c248ede74a9a9abd0a330881511
+    m_Address: LangPrefSettingPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 393ce112db68e224faca6ce0f270f8ed
+    m_Address: BugReportPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 8c4a3e133f5f8054ba5ead2bd4c03489
+    m_Address: GameSettingPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 822027735fc4d91408e24182fc67da78
+    m_Address: AudioPrefSettingPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: b83acbe8a5a564c44ae72669e72c9602
+    m_Address: GraphicPrefSettingPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 4ced76bb1987e47488ac869e6fdcbd38
+    m_Address: CreditPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 48bd064e9eaff854d8821cdc30ac688f
+    m_Address: ControlPrefSettingPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 84db25f722f64412a9b26ca52b46bfa2
+    m_Address: lang_cn
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 4fe77c0b9da6147d59495b84b03b6e7b
+    m_Address: lang_kr
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 52acef33fec3940ab8ff8e0cc0450fe0
+    m_Address: lang_en
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 32891b653db7f4bb094f2c4ca0804e04
+    m_Address: lang_tw
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c7bdc81b7941e46f2b0c2c74783d6286
+    m_Address: lang_jp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 416d64519c11b6548bc0f17ac52a9899
+    m_Address: SelectSavePanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 79b92396c9b14124aaf8f9d0044f473b
+    m_Address: CreateNewGamePanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 6adbadd526fbe2c40b4df7c42efe441d
+    m_Address: MainMenuPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: f0b4dcfcb7fb2894bacf68eb952a60f8
+    m_Address: Aircraft_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e1fb06be4d1b92d469c0c9cece95fe8b
+    m_Address: Cruiser
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 6e8a684d8c0fbc1478d0ba418d0cc328
+    m_Address: MotherShip
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 9dbd2ed20f36098478d38bc33e07eac5
+    m_Address: Battleship
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d6fc6c28b6f169740b326d3572e5833c
+    m_Address: Destroyer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 74797c5f82bc18648a5362ce44dfa1a1
+    m_Address: DefaultMaterials
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 183e1e2790df1e54e8b2fa0a24b27484
+    m_Address: MainGun01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 592a2807e237c6b4a97949d5b493afb6
+    m_Address: AttributeNumPopUpUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e7faf4c702e6b864c8a92e0d723bedb7
+    m_Address: ExplosionVFX
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: ae66197faa0fe6e4ca40db8ad0becbf8
+    m_Address: Captureable_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 18662468a1f503542afd4c4c1de0ea88
+    m_Address: OneAttribute
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 45dd19518c1941e4a94e50f52ae32298
+    m_Address: OneChar
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e0abba41da14bdb43aea674413ab39c0
+    m_Address: BattleUI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 3ffad09229388a040be74dfd6a8241b0
+    m_Address: AttributeType_15
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 3df113fb62ca8954e81e599dbc633e85
+    m_Address: AttributeType_14
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: e1683a1acccb446889b2eb95ce0cbaae
+    m_Address: AttributeType_8
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 57c9bc65f09114f608733305e6e15e2a
+    m_Address: AttributeType_9
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 12c36a3a039fe4503bfa34765ff45862
+    m_Address: AttributeType_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 3ade1d4f8d22745aa871e08a870b87a4
+    m_Address: AttributeType_11
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 5df367024fd9a42d993d65056dbf8944
+    m_Address: AttributeType_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: fefb8350c94d442d1acd6f4a4bf9617b
+    m_Address: AttributeType_6
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: cca5d5ae3af5a4596827c2a3e30feafe
+    m_Address: AttributeType_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 5e19d38a7a0e446d3b8caef98a3795d4
+    m_Address: AttributeType_7
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: bbb15593675c14783b3c8b79b16fa422
+    m_Address: AttributeType_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c57f5b19decd44526aa002e99d435543
+    m_Address: AttributeType_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c4e246c987a2745d9a604b6edc5567e2
+    m_Address: AttributeType_5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 214f3e55297353d4b827895b9229de4b
+    m_Address: AttributeType_10
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 733a3168871f0484c90df7f5b024f6b7
+    m_Address: DestinationIndicator
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 65b537c5d417381498f98ad9d4182b2c
+    m_Address: BattleResultPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 8bc889fd6579afd45bc1868007560cd1
+    m_Address: Assets/TestScene/DLam/3DModel/scene/material/islandTop.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: dc97a84105b20234184c35d95079b4ac
+    m_Address: PrepareShipHUD
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c57e5f6772188984b9d01973525a47ed
+    m_Address: BattleLogPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 806ea6c1f52e5d14383557b5121e12f0
+    m_Address: ShipyardMainPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: eb3dfa2ba5e8c3d468c2f64971195ebf
+    m_Address: ShipyardEquipmentModifyPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 089314a47599c0b42a4cab888030c856
+    m_Address: ShipyardShipChangingPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: b7af8e7897bca40418778efe3c218ee6
+    m_Address: ShipyardRoomModifyPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 039ba37e45daa2b4686a8861593e3497
+    m_Address: ShipSectionalViewPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d2d57de33b4edb141b51bb26233b373d
+    m_Address: SimpleCharacterDialogue
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c1852fe37af53e84a97cad98d1806b72
+    m_Address: Icon_shipLv1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: c19775bab9a678240a166befd5e80bdf
+    m_Address: Icon_shipLv2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d4692db6f05e3ab4da1080e545e91bcf
+    m_Address: Icon_shipLv3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d258978bb5af4ce4098eb6f5eae3684c
+    m_Address: VFX_HitExplosion
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 1ad73271f2e5dc940971efa69ba245b4
+    m_Address: VFX_HitExplosion_shield_regen
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: b43b3b3d987ff62409bc59a05589f0a7
+    m_Address: VFX_HitExplosion_shield
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: bb30c641403386c4b8fb2afffd8720ce
+    m_Address: VFX_HitExplosion_shield_break
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 0f4cdeadbbdd50d45ad6b787ffd0b88f
+    m_Address: Default_Cursor
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: ab73fc2034298b244802e2cc646fc8bb
+    m_Address: Default_Select_Target_Cursor
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d8ce767ed53773446911b456e6b9ad1b
+    m_Address: AAGun01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 19692c8bf7349b0488031d4cf287c5a5
+    m_Address: Missile01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: d11f5849d70ef2f4fa1234e716506fbf
+    m_Address: Range_Circle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 43496985d24e72a42ae8fe463a4b11dd
+    m_Address: Range_Line
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 0352e48c78188f44fb4e1155a07a174a
+    m_Address: modelWeapon_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 1262fc3cb7c3bc74db1cd42e31b33922
+    m_Address: Projectile
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 9528544ddc530de4d81f8af04d452404
+    m_Address: Missile02
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: a3fa7e09562ad7340906725c0a9d622f
+    m_Address: modelWeapon_1x3A
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 7ad2c5fc3240ce0429925d727eedbc0c
+    m_Address: modelWeapon_1x3B
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 3bb3c37f07f195045843e52e5b908f21
+    m_Address: modelWeapon_1x5A
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: ac17971176346de438f158e3576e2148
+    m_Address: modelWeapon_1x5B
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 617620ab38de50843a94d4405c604e05
+    m_Address: SelectLevelPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 76646dbb746366c44a2129ddc0d4094a
+    m_Address: Aircraft_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 7edaca2a8e3d23345b2d4c961b849691
+    m_Address: SpawnGroup1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: a16890398d475564098ce2e1996b992e
+    m_Address: TestItem_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: b31fb3e23ad470d4db9a1cb28ec71a45, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 2eac807e0da86de4281082c65d040259, type: 2}
+    - {fileID: 11400000, guid: 2e000147970af3d4984f43fb8a906c00, type: 2}

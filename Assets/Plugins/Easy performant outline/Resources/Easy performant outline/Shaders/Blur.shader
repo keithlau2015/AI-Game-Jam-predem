@@ -17,7 +17,7 @@
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_instancing
-            #pragma multi_compile BOX_BLUR GAUSSIAN5X5 GAUSSIAN9X9 GAUSSIAN13X13
+            #pragma multi_compile ANISOTROPIC_BLUR BOX_BLUR GAUSSIAN5X5 GAUSSIAN9X9 GAUSSIAN13X13
             #pragma multi_compile __ USE_INFO_BUFFER
 			#pragma fragmentoption ARB_precision_hint_fastest
 
@@ -47,10 +47,6 @@
             half4 _MainTex_TexelSize;
             half2 _Shift;
             
-            UNITY_INSTANCING_BUFFER_START (Properties)
-            UNITY_DEFINE_INSTANCED_PROP (float4x4, _NormalMatrices)
-            UNITY_INSTANCING_BUFFER_END(Properties)
-
 #if USE_INFO_BUFFER
             UNITY_DECLARE_SCREENSPACE_TEXTURE(_InfoBuffer);
             half4 _InfoBuffer_ST;
@@ -69,12 +65,18 @@
                 
                 o.vertex = UnityObjectToClipPos(v.vertex);
 
+				PostprocessCoords
+
                 ComputeScreenShift
 
                 o.uv = ComputeScreenPos(o.vertex);
 				o.uv.xy *= _Scale;
 
 				CheckY
+
+#if UNITY_UV_STARTS_AT_TOP
+				ModifyUV
+#endif
 
                 return o;
             }
@@ -94,7 +96,7 @@
                 targetShift *= info.g;
 #endif
 
-#if BOX_BLUR
+#if BOX_BLUR || ANISOTROPIC_BLUR
                 half4 first = FetchTexelAtWithShift(uv, targetShift);
                 half4 second = FetchTexelAtWithShift(uv, -targetShift);
                 half4 center = FetchTexelAt(uv);    

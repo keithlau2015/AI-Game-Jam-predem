@@ -10,7 +10,7 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEditor.UnityLinker;
 
-namespace OPS.Obfuscator
+namespace GUPS.Obfuscator
 {
     public class BuildPostProcessor : IPreprocessBuildWithReport, IFilterBuildAssemblies, IPostBuildPlayerScriptDLLs, IUnityLinkerProcessor, IPostprocessBuildWithReport
     {
@@ -22,22 +22,35 @@ namespace OPS.Obfuscator
             get { return int.MaxValue; }
         }
 
-        private static OPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings PrepareEditorSettings()
+        private static GUPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings PrepareEditorSettings()
         {
-            OPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings var_EditorSettings = new Editor.Settings.Unity.Editor.EditorSettings();
+            GUPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings var_EditorSettings = new Editor.Settings.Unity.Editor.EditorSettings();
 
             return var_EditorSettings;
         }
 
-        private static OPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings PrepareBuildSettings(BuildReport _Report)
+        private static GUPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings PrepareBuildSettings(BuildReport _Report)
         {
-            OPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings var_BuildSettings = new Editor.Settings.Unity.Build.BuildSettings();
+            GUPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings var_BuildSettings = new Editor.Settings.Unity.Build.BuildSettings();
             var_BuildSettings.IsDevelopmentBuild = UnityEditor.EditorUserBuildSettings.development;
             var_BuildSettings.BuildTarget = UnityEditor.EditorUserBuildSettings.activeBuildTarget;
             var_BuildSettings.BuildTargetGroup = UnityEditor.EditorUserBuildSettings.selectedBuildTargetGroup;
             var_BuildSettings.UnityBuildReport = _Report;
             var_BuildSettings.IsIL2CPPBuild = PlayerSettings.GetScriptingBackend(UnityEditor.EditorUserBuildSettings.selectedBuildTargetGroup) == ScriptingImplementation.IL2CPP;
-            var_BuildSettings.Compression = (OPS.Editor.Settings.Unity.Build.CompressionType) typeof(UnityEditor.EditorUserBuildSettings).GetMethod("GetCompressionType", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).Invoke(null, new object[] { UnityEditor.EditorUserBuildSettings.selectedBuildTargetGroup });
+            
+			if (_Report == null)
+			{
+				var_BuildSettings.Compression = (GUPS.Editor.Settings.Unity.Build.CompressionType) typeof(UnityEditor.EditorUserBuildSettings)
+					.GetMethod("GetCompressionType", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+					.Invoke(null, new object[] { UnityEditor.EditorUserBuildSettings.selectedBuildTargetGroup });
+			}
+			else
+			{			
+				var_BuildSettings.Compression = _Report.summary.options.HasFlag(BuildOptions.CompressWithLz4) ? GUPS.Editor.Settings.Unity.Build.CompressionType.Lz4 :
+                           _Report.summary.options.HasFlag(BuildOptions.CompressWithLz4HC) ? GUPS.Editor.Settings.Unity.Build.CompressionType.Lz4HC :
+                           GUPS.Editor.Settings.Unity.Build.CompressionType.None;
+			}						   
+						   
             var_BuildSettings.BuildIntoProject = (UnityEditor.EditorUserBuildSettings.activeBuildTarget == BuildTarget.StandaloneOSX && UnityEditor.EditorUserBuildSettings.GetPlatformSettings("OSXUniversal", "CreateXcodeProject").Equals("true"))
                 || (UnityEditor.EditorUserBuildSettings.activeBuildTarget == BuildTarget.StandaloneWindows && UnityEditor.EditorUserBuildSettings.GetPlatformSettings("Standalone", "CreateSolution").Equals("true"))
                 || (UnityEditor.EditorUserBuildSettings.activeBuildTarget == BuildTarget.StandaloneWindows64 && UnityEditor.EditorUserBuildSettings.GetPlatformSettings("Standalone", "CreateSolution").Equals("true"))
@@ -49,17 +62,17 @@ namespace OPS.Obfuscator
         public void OnPreprocessBuild(BuildReport _Report)
         {
             // Settings
-            OPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings var_EditorSettings = PrepareEditorSettings();
-            OPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings var_BuildSettings = PrepareBuildSettings(_Report);
+            GUPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings var_EditorSettings = PrepareEditorSettings();
+            GUPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings var_BuildSettings = PrepareBuildSettings(_Report);
 
             // Init
-            OPS.Obfuscator.Editor.Obfuscator.Init();
+            GUPS.Obfuscator.Editor.Obfuscator.Init();
             hasObfuscated = false;
 
             try
             {
                 // Pre Build
-                OPS.Obfuscator.Editor.Obfuscator.Singleton.PreBuild(var_EditorSettings, var_BuildSettings);
+                GUPS.Obfuscator.Editor.Obfuscator.Singleton.PreBuild(var_EditorSettings, var_BuildSettings);
             }
             catch (Exception e)
             {
@@ -84,11 +97,11 @@ namespace OPS.Obfuscator
                         UnityEditor.EditorApplication.LockReloadAssemblies();
 
                         // Settings
-                        OPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings var_EditorSettings = PrepareEditorSettings();
-                        OPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings var_BuildSettings = PrepareBuildSettings(_Report);
+                        GUPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings var_EditorSettings = PrepareEditorSettings();
+                        GUPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings var_BuildSettings = PrepareBuildSettings(_Report);
 
                         // Obfuscate
-                        OPS.Obfuscator.Editor.Obfuscator.Singleton.PostAssemblyBuild(var_EditorSettings, var_BuildSettings);
+                        GUPS.Obfuscator.Editor.Obfuscator.Singleton.PostAssemblyBuild(var_EditorSettings, var_BuildSettings);
                         hasObfuscated = true;
                     }
                     catch (Exception e)
@@ -110,11 +123,11 @@ namespace OPS.Obfuscator
                 try
                 {
                     // Settings
-                    OPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings var_EditorSettings = PrepareEditorSettings();
-                    OPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings var_BuildSettings = PrepareBuildSettings(_Report);
+                    GUPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings var_EditorSettings = PrepareEditorSettings();
+                    GUPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings var_BuildSettings = PrepareBuildSettings(_Report);
 
                     // Post Build
-                    OPS.Obfuscator.Editor.Obfuscator.Singleton.PostAssetsBuild(var_EditorSettings, var_BuildSettings);
+                    GUPS.Obfuscator.Editor.Obfuscator.Singleton.PostAssetsBuild(var_EditorSettings, var_BuildSettings);
                 }
                 catch (Exception e)
                 {
@@ -143,11 +156,11 @@ namespace OPS.Obfuscator
                 try
                 {
                     // Settings
-                    OPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings var_EditorSettings = PrepareEditorSettings();
-                    OPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings var_BuildSettings = PrepareBuildSettings(_Report);
+                    GUPS.Obfuscator.Editor.Settings.Unity.Editor.EditorSettings var_EditorSettings = PrepareEditorSettings();
+                    GUPS.Obfuscator.Editor.Settings.Unity.Build.BuildSettings var_BuildSettings = PrepareBuildSettings(_Report);
 
                     // Post Build
-                    OPS.Obfuscator.Editor.Obfuscator.Singleton.PostBuild(var_EditorSettings, var_BuildSettings);
+                    GUPS.Obfuscator.Editor.Obfuscator.Singleton.PostBuild(var_EditorSettings, var_BuildSettings);
                 }
                 catch (Exception e)
                 {

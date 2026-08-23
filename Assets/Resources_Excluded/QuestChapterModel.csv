@@ -1,0 +1,5 @@
+ID,Type,PreQuestChapterID,Difficulty,RewardGrpID,ChallengeLimitCount,NameID,DescriptionID,IconID
+1,0,-1,1,2,-1,QuestChapter_Name_1,QuestChapter_Desc_1,i_qc_1
+2,0,-1,1,3,-1,QusetChapter_Name_2,QuestChapter_Desc_2,i_qc_2
+1000,1,-1,5,0,3,QuestChapter_Name_1000,QuestChapter_Desc_1000,i_qc_1000
+2000,2,-1,3,0,10,QuestChapter_Name_2000,QuestChapter_Desc_2000,i_qc_2000

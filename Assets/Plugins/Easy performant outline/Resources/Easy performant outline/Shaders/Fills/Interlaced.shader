@@ -83,11 +83,12 @@
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
 
+				PostprocessCoords
+
                 FixDepth
 
 #if USE_INFO_BUFFER
 				o.screenUV = ComputeScreenPos(o.vertex);
-				o.screenUV.xy *= _Scale;
 #endif
 
                 o.screenPos = ComputeScreenPos(o.vertex);
@@ -124,8 +125,7 @@
                 float4 result = lerp(_PublicGapColor, _PublicColor, factor);
 
 #if USE_INFO_BUFFER
-				float2 uv = (i.screenUV.xy / i.screenUV.w);
-				result.a *= GetScaler(i.screenUV, FetchTexelAtFrom(_InfoBuffer, uv, _InfoBuffer_ST));
+				result.a *= GetScaler(i.screenUV, FetchTexelAtFrom(_InfoBuffer, i.screenUV, _InfoBuffer_ST));
 #endif
 
 				return result;

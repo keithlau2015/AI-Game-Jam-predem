@@ -7,15 +7,17 @@
 
         Pass
         {
-        	Stencil 
+            Stencil 
             {
-                Ref 255
-                Comp NotEqual
-                Pass Replace
+                Ref [_OutlineRef]
+                Comp [_Comparison]
+                Pass [_Operation]
                 ZFail Keep
                 Fail Keep
+                ReadMask [_ReadMask]
+                WriteMask 255
             }
-        	
+
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -47,20 +49,12 @@
             UNITY_DECLARE_SCREENSPACE_TEXTURE(_MainTex);
             half4 _MainTex_ST;
             half4 _MainTex_TexelSize;
-            
-            UNITY_DECLARE_SCREENSPACE_TEXTURE(_Mask);
-            half4 _Mask_ST;
-            half4 _Mask_TexelSize;
 
             UNITY_DECLARE_SCREENSPACE_TEXTURE(_InitialTex);
             half4 _InitialTex_ST;
             half4 _InitialTex_TexelSize;
 
 			DefineCoords
-            
-            UNITY_INSTANCING_BUFFER_START (Properties)
-            UNITY_DEFINE_INSTANCED_PROP (float4x4, _NormalMatrices)
-            UNITY_INSTANCING_BUFFER_END(Properties)
 
             v2f vert (appdata v)
             {
@@ -72,38 +66,25 @@
 				
                 o.vertex = UnityObjectToClipPos(v.vertex);
 				
+				PostprocessCoords
+
                 ComputeScreenShift
 
                 o.uv = ComputeScreenPos(o.vertex);
 				o.uv.xy *= _Scale;
 
+#if UNITY_UV_STARTS_AT_TOP
+				ModifyUV
+#endif
+
                 return o;
             }
-
-            inline float GetSampleValue(float2 uv)
-			{
-				float result = 0.0f;
-			    for (float x = -1.0f; x <= 1.0f; x++)
-			    {
-			        for (float y = -1.0f; y <= 1.0f; y++)
-				    {
-						result += FetchTexelAtFrom(_Mask, uv + float2(x, y) * _Mask_TexelSize.xy, _Mask_ST).a > 0.0f;
-				    }
-			    }
-
-				return result > 8.0f;
-			}
             
             half4 frag (v2f i) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                float2 uv = i.uv.xy / i.uv.w;
-                
-                float4 texel = FetchTexel(uv);
-            	float mask = GetSampleValue(uv);
-
-                return texel * (1.0f - mask);
+                return FetchTexel(i.uv.xy / i.uv.w);
             }
             ENDCG
         }

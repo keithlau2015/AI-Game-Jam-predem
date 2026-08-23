@@ -59,6 +59,8 @@
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
 
+				PostprocessCoords
+
 #ifdef PIXELSNAP_ON
 				OUT.vertex = UnityPixelSnap (OUT.vertex);
 #endif

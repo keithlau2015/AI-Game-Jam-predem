@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace OPS.Obfuscator.Attribute
+namespace GUPS.Obfuscator.Attribute
 {
     /// <summary>
     /// Add this to a Class, so the whole class with all its content will not get obfuscated! 

@@ -79,7 +79,6 @@
             };
 			
 			DEFINE_CUTOUT
-            DefineCoords
 
             half _PublicAngle;
 
@@ -101,7 +100,6 @@
 
 #if USE_INFO_BUFFER
 				o.screenUV = ComputeScreenPos(o.vertex);
-				o.screenUV.xy *= _Scale;
 #endif
 
                 o.direction = half2(sin(_PublicAngle / 57.295779513), cos(_PublicAngle / 57.295779513));
@@ -148,8 +146,7 @@
                     calculateAlphaMultiplier(secondaryProjection, _PublicVerticalGapSize, _PublicVerticalSoftness, _PublicVerticalSpeed, _PublicVerticalSize);
 
 #if USE_INFO_BUFFER
-				float2 uv = (i.screenUV.xy / i.screenUV.w);
-				resultingColor.a *= GetScaler(i.screenUV, FetchTexelAtFrom(_InfoBuffer, uv, _InfoBuffer_ST));
+				resultingColor.a *= GetScaler(i.screenUV, FetchTexelAtFrom(_InfoBuffer, i.screenUV, _InfoBuffer_ST));
 #endif
 
                 return resultingColor;

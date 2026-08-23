@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -65,7 +66,7 @@ namespace EPOOutline
                 maskMenu.ShowAsContext();
             }
 
-#if (URP_OUTLINE || HDRP_OUTLINE)
+#if (URP_OUTLINE || HDRP_OUTLINE) && UNITY_EDITOR && UNITY_2019_1_OR_NEWER
             var isHDRP = PipelineAssetUtility.IsHDRP(PipelineAssetUtility.CurrentAsset);
 #else
             var isHDRP = false;
@@ -76,36 +77,13 @@ namespace EPOOutline
                 DrawPropertiesExcluding(serializedObject,
                     "m_Script",
                     "outlineLayerMask",
-                    "primaryRendererScale",
-                    "primaryBufferSizeMode",
-                    "primarySizeReference",
-                    "renderingMode");
+                    "primaryRendererScale");
             }
             else
             {
-                var itemsToExclude = new List<string>
-                {
+                DrawPropertiesExcluding(serializedObject,
                     "m_Script",
-                    "outlineLayerMask"
-                };
-
-                var mode = (BufferSizeMode)serializedObject.FindProperty("primaryBufferSizeMode").intValue;
-                switch (mode)
-                {
-                    case BufferSizeMode.Native:
-                        itemsToExclude.Add("primaryRendererScale");
-                        itemsToExclude.Add("primarySizeReference");
-                        break;
-                    case BufferSizeMode.Scaled:
-                        itemsToExclude.Add("primarySizeReference");
-                        break;
-                    case BufferSizeMode.HeightControlsWidth:
-                    case BufferSizeMode.WidthControlsHeight:
-                        itemsToExclude.Add("primaryRendererScale");
-                        break;
-                }
-                
-                DrawPropertiesExcluding(serializedObject, propertyToExclude: itemsToExclude.ToArray());
+                    "outlineLayerMask");
             }
 
             serializedObject.ApplyModifiedProperties();
