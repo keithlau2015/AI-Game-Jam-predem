@@ -5,12 +5,13 @@
 ```text
 ## Status
 - Last Updated: 2026-08-24
-- Updated By: bootstrap
+- Updated By: subagent:UI/UX
 - Phases Done: —
-- Current: —
+- Current: P17, P18
 - Blocked: —
 ## Changelog
 - 2026-08-24 (bootstrap): doc created; owns PrototypeUI (P17) + debug viz (P18).
+- 2026-08-24 (subagent:UI/UX): implemented PrototypeUI (P17) + PortalRangeGizmo/DirectionArrow/PlacementPreview (P18); subscribes to GameManager/PortalPlacementController events only.
 ```
 
 **Domain:** All on-screen communication — HUD, prompts, state display, and debug visualization.

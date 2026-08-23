@@ -5,12 +5,13 @@
 ```text
 ## Status
 - Last Updated: 2026-08-24
-- Updated By: bootstrap
-- Phases Done: —
-- Current: P0 baseline scene + GameManager (P3)
+- Updated By: subagent:Transition
+- Phases Done: P0, P3
+- Current: P4–P7, P10, P20
 - Blocked: —
 ## Changelog
 - 2026-08-24 (bootstrap): doc created; owns GameManager + portal placement state machine.
+- 2026-08-24 (subagent:Transition): implemented GameManager (P3) + PortalPlacementController state machine (P4–P7); updated docs.
 ```
 
 **Domain:** Game-state flow, portal placement state machine, cooldown lifecycle, scene retry.
