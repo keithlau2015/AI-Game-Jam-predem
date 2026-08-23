@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/Scenes/PortalTest2D.unity
+    guid: c4e8f1a23b5d6e947a1c0d8e2f3b4a5c
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 834159868fb31594dac648d1486bab79, type: 2}
     com.unity.input.settings: {fileID: 11400000, guid: bdc1e129ac807154290a94dc7995e1b0, type: 2}
