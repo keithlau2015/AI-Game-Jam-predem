@@ -1,5 +1,18 @@
 # Agent: Graphics (Visuals, Sprites, Materials, Gizmos, VFX)
 
+> **STATUS BLOCK — update after every task (see `AGENTS.md`).**
+
+```text
+## Status
+- Last Updated: 2026-08-24
+- Updated By: bootstrap
+- Phases Done: —
+- Current: P0 prefab shells
+- Blocked: —
+## Changelog
+- 2026-08-24 (bootstrap): doc created; owns all visuals + gizmo colors.
+```
+
 **Domain:** Everything the player sees — sprites, colors, materials, debug gizmo visuals,
 scene look, lightweight VFX. No gameplay logic.
 **Owns (write access):** `Assets/Art/`, prefab visuals, materials, `Assets/Scripts/Debug/`

@@ -1,5 +1,18 @@
 # Agent: GameMechanism (Core Systems)
 
+> **STATUS BLOCK — update after every task (see `AGENTS.md`).**
+
+```text
+## Status
+- Last Updated: 2026-08-24
+- Updated By: bootstrap
+- Phases Done: —
+- Current: P0 baseline (Direction + EscortTarget)
+- Blocked: —
+## Changelog
+- 2026-08-24 (bootstrap): doc created; owns Direction/EscortTarget/teleport/floor contracts.
+```
+
 **Domain:** Core gameplay engine — the rules that make the escort + portal + floor loop work.
 **Owns (write access):** `Assets/Scripts/Core/`, `Assets/Scripts/Escort/EscortTarget.cs`,
 `Assets/Scripts/Portal/PortalPairController.cs`, `Assets/Scripts/Portal/PortalEndpoint.cs`,

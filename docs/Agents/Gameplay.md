@@ -1,5 +1,18 @@
 # Agent: Gameplay (Level Content & Combat)
 
+> **STATUS BLOCK — update after every task (see `AGENTS.md`).**
+
+```text
+## Status
+- Last Updated: 2026-08-24
+- Updated By: bootstrap
+- Phases Done: —
+- Current: —
+- Blocked: —
+## Changelog
+- 2026-08-24 (bootstrap): doc created; owns spawner/hazards/turret/projectile/level.
+```
+
 **Domain:** Spawning, hazards, level geometry, turret/projectile combat.
 **Owns (write access):** `Assets/Scripts/Escort/EscortSpawner.cs`,
 `Assets/Scripts/Level/Goal.cs`, `Assets/Scripts/Level/Obstacle.cs`,

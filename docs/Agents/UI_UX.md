@@ -1,5 +1,18 @@
 # Agent: UI/UX (Interface, Feedback, Debug)
 
+> **STATUS BLOCK — update after every task (see `AGENTS.md`).**
+
+```text
+## Status
+- Last Updated: 2026-08-24
+- Updated By: bootstrap
+- Phases Done: —
+- Current: —
+- Blocked: —
+## Changelog
+- 2026-08-24 (bootstrap): doc created; owns PrototypeUI (P17) + debug viz (P18).
+```
+
 **Domain:** All on-screen communication — HUD, prompts, state display, and debug visualization.
 **Owns (write access):** `Assets/Scripts/UI/PrototypeUI.cs`, `Assets/Scripts/Debug/`
 (gizmos, previews, arrows), any Canvas/prefab UI assets.

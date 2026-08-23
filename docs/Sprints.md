@@ -6,6 +6,19 @@ next sprint starts.
 
 > Rule from TASKS.md: complete a phase, **Play Test in Unity**, then proceed.
 
+### Per-sprint docs (read these, not just this index)
+- `docs/sprints/Sprint0.md` — Baseline (P0, P1)
+- `docs/sprints/Sprint1.md` — World & Hazards (P2, P3, P11–P16)
+- `docs/sprints/Sprint2.md` — Portal Loop (P4–P10) *(integration-critical)*
+- `docs/sprints/Sprint3.md` — Presentation (P17, P18)
+- `docs/sprints/Sprint4.md` — Level & Polish (P19)
+- `docs/sprints/Sprint5.md` — Final Check (P20)
+
+### Live tracker
+The real status of every sprint/phase lives in **`docs/Progress.md`** (single source of truth).
+Before starting a sprint, read `docs/Progress.md` → `## Current Sprint`; after any task, update
+your row there and your `docs/Agents/<role>.md` `## Status`. See `AGENTS.md`.
+
 ## Sprint 0 — Baseline (serial-ish, short)
 **Agents:** Transition + GameMechanism
 - P0 scene/camera/ground/layers, P1 Direction + EscortTarget movement.

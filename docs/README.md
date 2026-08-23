@@ -5,18 +5,26 @@ multiple AI agents can implement the game **in parallel** without file/code conf
 
 ## How to use these docs
 
-1. Read `GameDesign.md` → what the game is.
-2. Read `TechnicalDesign.md` → how it is built (architecture, layers, data flow).
-3. Read `TASKS.md` → the 21 phases (P0–P20) with acceptance criteria.
-4. Read `Contracts.md` → the **shared public APIs** that agents must NOT break.
-5. Read your agent doc in `Agents/` → your ownership boundary, files, deliverables.
-6. Read `Sprints.md` → which phases run in parallel and in what order.
-7. Read `Workflow.md` → how to run parallel agents safely (git worktree / domain isolation).
+> **MANDATORY ENTRY POINT:** Every AI agent (Claude, OpenCode, Cursor, Codex, Gemini, or any
+> other) and every human MUST first read `AGENTS.md` at the repo root. It enforces a single
+> source of truth and forces doc updates on every task.
+
+1. Read `AGENTS.md` → the rules + forced doc-update discipline (start here, every session).
+2. Read `Progress.md` → the **live whole-project tracker** (one file = total progress).
+3. Read `GameDesign.md` → what the game is.
+4. Read `TechnicalDesign.md` → how it is built (architecture, layers, data flow).
+5. Read `TASKS.md` → the 21 phases (P0–P20) with acceptance criteria.
+6. Read `Contracts.md` → the **shared public APIs** that agents must NOT break.
+7. Read your agent doc in `Agents/` → your ownership boundary, files, deliverables, `## Status`.
+8. Read `Sprints.md` + `sprints/SprintN.md` → which phases run in parallel and in what order.
+9. Read `Workflow.md` → how to run parallel agents safely (git worktree / domain isolation).
 
 ## Document map
 
 | File | Purpose | Owner |
 |------|---------|-------|
+| `../AGENTS.md` | **Mandatory entry point** + forced doc-update rules for ALL agents | All |
+| `Progress.md` | **Single source of truth** — live whole-project status board | All |
 | `GameDesign.md` | Game design / player-facing rules | All |
 | `TechnicalDesign.md` | Architecture, layers, data contracts | All |
 | `TASKS.md` | P0–P20 phase checklist + acceptance | All |

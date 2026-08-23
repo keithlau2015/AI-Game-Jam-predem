@@ -3,6 +3,22 @@
 Synthesized from current best-practice references for multi-agent Unity game dev
 (Claude/OpenCode game-studio scaffolds, git worktree parallelism, dispatcher orchestration).
 
+---
+
+## 0. MANDATORY: single entry point & doc updates (read `AGENTS.md` first)
+
+Every agent — no matter which AI tool runs it — MUST:
+
+1. Read `AGENTS.md`, then `docs/Progress.md`, then its `docs/Agents/<role>.md`.
+2. **Before and after each task**, update:
+   - `docs/Progress.md` → its Domain Matrix row + `## Changelog` (date + agent + change).
+   - `docs/Agents/<role>.md` → its `## Status` block (Last Updated, Updated By, Phases Done,
+     Current, Blocked).
+3. Never break `docs/Contracts.md` without logging a `## Contract Change Notice` in `Progress.md`.
+4. Mark a phase done `[x]` only after a real Unity Play Test passes acceptance.
+
+This is what keeps many AIs coherent. Skipping doc updates = drift = broken game.
+
 ## Principles (why parallel works)
 1. **Domain separation** — each agent owns folders; files don't overlap → few merge conflicts.
 2. **Contracts as APIs** — shared types frozen in `Contracts.md`; change via proposal only.

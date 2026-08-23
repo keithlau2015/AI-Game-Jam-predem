@@ -1,5 +1,18 @@
 # Agent: Transition (Flow, State, Portal Placement Orchestration)
 
+> **STATUS BLOCK — update after every task (see `AGENTS.md`).**
+
+```text
+## Status
+- Last Updated: 2026-08-24
+- Updated By: bootstrap
+- Phases Done: —
+- Current: P0 baseline scene + GameManager (P3)
+- Blocked: —
+## Changelog
+- 2026-08-24 (bootstrap): doc created; owns GameManager + portal placement state machine.
+```
+
 **Domain:** Game-state flow, portal placement state machine, cooldown lifecycle, scene retry.
 **Owns (write access):** `Assets/Scripts/Core/GameManager.cs`,
 `Assets/Scripts/Portal/PortalPlacementController.cs`.

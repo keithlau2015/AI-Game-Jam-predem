@@ -1,5 +1,18 @@
 # Agent: Music (Audio — BGM, SFX, Cues)
 
+> **STATUS BLOCK — update after every task (see `AGENTS.md`).**
+
+```text
+## Status
+- Last Updated: 2026-08-24
+- Updated By: bootstrap
+- Phases Done: —
+- Current: —
+- Blocked: —
+## Changelog
+- 2026-08-24 (bootstrap): doc created; owns BGM/SFX event-driven cues.
+```
+
 **Domain:** All sound — background music, gameplay SFX, UI/feedback cues, mixing.
 **Owns (write access):** `Assets/Audio/`, audio source/components, `AudioManager` (if needed).
 
