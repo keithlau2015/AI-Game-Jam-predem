@@ -17,7 +17,9 @@ namespace PortalModule.Editor
 
             CreateCamera();
             CreateGround();
+            CreateWalls();
             CreatePortalService();
+            CreateGameRules();
             CreatePortalPair();
             CreatePlayer();
 
@@ -44,6 +46,50 @@ namespace PortalModule.Editor
             GameObject ground = CreateColoredSprite("Ground", new Color(0.25f, 0.28f, 0.32f), new Vector3(0f, -3.5f, 0f), new Vector2(24f, 1f));
             BoxCollider2D collider = ground.AddComponent<BoxCollider2D>();
             collider.size = new Vector2(24f, 1f);
+        }
+
+        private static void CreateWalls()
+        {
+            CreateWall("Wall_Left", new Vector3(-11f, -1f, 0f), new Vector2(1f, 8f));
+            CreateWall("Wall_Right", new Vector3(11f, -1f, 0f), new Vector2(1f, 8f));
+            CreateWall("Wall_Top", new Vector3(0f, 3.5f, 0f), new Vector2(22f, 1f));
+        }
+
+        private static void CreateWall(string name, Vector3 position, Vector2 size)
+        {
+            GameObject wall = CreateColoredSprite(name, new Color(0.18f, 0.2f, 0.24f), position, size);
+            BoxCollider2D collider = wall.AddComponent<BoxCollider2D>();
+            collider.size = size;
+            wall.AddComponent<PortalWallHazard>();
+        }
+
+        private static void CreateGameRules()
+        {
+            GameObject rulesGo = new GameObject("GameRules");
+            rulesGo.AddComponent<PortalGameRuleController>();
+
+            GameObject goalGo = new GameObject("LevelGoal");
+            goalGo.transform.position = new Vector3(9f, -1f, 0f);
+
+            BoxCollider2D goalCollider = goalGo.AddComponent<BoxCollider2D>();
+            goalCollider.isTrigger = true;
+            goalCollider.size = new Vector2(2f, 3f);
+
+            Rigidbody2D goalBody = goalGo.AddComponent<Rigidbody2D>();
+            goalBody.bodyType = RigidbodyType2D.Kinematic;
+            goalBody.gravityScale = 0f;
+
+            PortalLevelGoalTrigger2D goalTrigger = goalGo.AddComponent<PortalLevelGoalTrigger2D>();
+            SerializedObject goalObject = new SerializedObject(goalTrigger);
+            SerializedProperty advance = goalObject.FindProperty("advanceSettings");
+            advance.FindPropertyRelative("mode").enumValueIndex = (int)PortalLevelAdvanceMode.NextBuildSettingsScene;
+            goalObject.FindProperty("filterMode").enumValueIndex = (int)PortalLevelGoalTrigger2D.FilterMode.Tag;
+            goalObject.FindProperty("requiredTag").stringValue = "Player";
+            goalObject.ApplyModifiedPropertiesWithoutUndo();
+
+            GameObject goalVisual = CreateColoredSprite("GoalVisual", new Color(0.35f, 0.95f, 0.45f), Vector3.zero, new Vector2(2f, 3f));
+            goalVisual.transform.SetParent(goalGo.transform, false);
+            Object.DestroyImmediate(goalVisual.GetComponent<BoxCollider2D>());
         }
 
         private static void CreatePortalService()
@@ -127,6 +173,7 @@ namespace PortalModule.Editor
             collider.radius = 0.4f;
 
             player.AddComponent<PortalTestPlayer2D>();
+            player.AddComponent<PortalPlayerGameRuleSensor>();
         }
 
         private static GameObject CreateColoredSprite(string name, Color color, Vector3 position, Vector2 size)

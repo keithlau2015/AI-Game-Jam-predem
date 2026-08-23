@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace PortalModule
 {
-    [RequireComponent(typeof(Collider))]
-    public class PortalTrigger : MonoBehaviour
+    [RequireComponent(typeof(Collider), typeof(Rigidbody))]
+    public class PortalLevelGoalTrigger : MonoBehaviour
     {
         public enum FilterMode
         {
@@ -15,10 +15,7 @@ namespace PortalModule
         }
 
         [SerializeField]
-        private string sourcePortalId;
-
-        [SerializeField]
-        private PortalTransitionSettings transition = new PortalTransitionSettings();
+        private PortalLevelAdvanceSettings advanceSettings = new PortalLevelAdvanceSettings();
 
         [SerializeField]
         private FilterMode filterMode = FilterMode.Tag;
@@ -32,76 +29,43 @@ namespace PortalModule
         [SerializeField]
         private bool useRootGameObject = true;
 
-        [SerializeField]
-        private float cooldownSeconds = 1f;
-
         private Collider triggerCollider;
+        private Rigidbody triggerBody;
 
-        public string SourcePortalId => sourcePortalId;
-        public PortalTransitionSettings Transition => transition;
-        public float CooldownSeconds
-        {
-            get => cooldownSeconds;
-            set => cooldownSeconds = Mathf.Max(0f, value);
-        }
-
-        public void Configure(
-            string portalId,
-            PortalTransitionSettings transitionSettings,
-            FilterMode filter,
-            string tag,
-            float cooldown)
-        {
-            sourcePortalId = portalId;
-            transition = transitionSettings;
-            filterMode = filter;
-            requiredTag = tag;
-            cooldownSeconds = cooldown;
-        }
+        public PortalLevelAdvanceSettings AdvanceSettings => advanceSettings;
 
         private void Awake()
         {
             triggerCollider = GetComponent<Collider>();
             triggerCollider.isTrigger = true;
+
+            triggerBody = GetComponent<Rigidbody>();
+            triggerBody.isKinematic = true;
+            triggerBody.useGravity = false;
         }
 
         private void OnTriggerEnter(Collider other)
         {
-            if (other == null)
+            TryHandleTrigger(other.gameObject, other.transform.root.gameObject);
+        }
+
+        private void TryHandleTrigger(GameObject colliderObject, GameObject rootObject)
+        {
+            if (colliderObject == null)
                 return;
 
-            GameObject candidate = useRootGameObject ? other.transform.root.gameObject : other.gameObject;
-            if (!PassesFilter(candidate, other.gameObject))
+            GameObject candidate = useRootGameObject ? rootObject : colliderObject;
+            if (!PassesFilter(candidate, colliderObject))
                 return;
 
-            PortalService service = PortalService.Resolve();
-            if (service == null)
+            PortalGameRuleController controller = PortalGameRuleController.Instance;
+            if (controller == null)
             {
-                Debug.LogError("[PortalTrigger] PortalService is missing.", this);
+                Debug.LogError("[PortalLevelGoalTrigger] PortalGameRuleController is missing.", this);
                 return;
             }
 
-            if (!service.CanUsePortal(candidate))
-                return;
-
-            if (service.ExecuteTransition(transition, candidate, this))
-                service.RegisterCooldown(candidate, cooldownSeconds);
-        }
-
-        public bool TryTeleport(GameObject traveler)
-        {
-            PortalService service = PortalService.Resolve();
-            if (traveler == null || service == null)
-                return false;
-
-            if (!service.CanUsePortal(traveler))
-                return false;
-
-            if (!service.ExecuteTransition(transition, traveler, this))
-                return false;
-
-            service.RegisterCooldown(traveler, cooldownSeconds);
-            return true;
+            controller.RegisterVictory(candidate, advanceSettings);
         }
 
         private bool PassesFilter(GameObject root, GameObject colliderObject)
@@ -133,7 +97,7 @@ namespace PortalModule
 #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
-            Gizmos.color = new Color(0.9f, 0.4f, 1f, 0.35f);
+            Gizmos.color = new Color(0.3f, 1f, 0.45f, 0.35f);
             Collider col = GetComponent<Collider>();
             if (col is BoxCollider box)
             {

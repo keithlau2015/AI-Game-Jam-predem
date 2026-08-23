@@ -29,6 +29,13 @@ namespace PortalModule
             return SpawnTransform.rotation;
         }
 
+        public void Configure(string id, Transform spawn, bool spawnRotation)
+        {
+            portalId = id;
+            spawnPoint = spawn;
+            useSpawnRotation = spawnRotation;
+        }
+
         private void OnEnable()
         {
             PortalService service = PortalService.Resolve();

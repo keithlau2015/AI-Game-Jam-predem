@@ -310,6 +310,7 @@ namespace PortalModule
             Quaternion rotation = destination.GetSpawnRotation();
             NavMeshAgent agent = traveler.GetComponentInParent<NavMeshAgent>();
             Rigidbody2D body2D = traveler.GetComponentInParent<Rigidbody2D>();
+            Rigidbody body3D = traveler.GetComponentInParent<Rigidbody>();
 
             if (agent != null && agent.enabled)
             {
@@ -323,6 +324,13 @@ namespace PortalModule
                 body2D.angularVelocity = 0f;
                 body2D.MovePosition(position);
                 body2D.rotation = rotation.eulerAngles.z;
+            }
+            else if (body3D != null)
+            {
+                body3D.velocity = Vector3.zero;
+                body3D.angularVelocity = Vector3.zero;
+                body3D.position = position;
+                body3D.rotation = rotation;
             }
             else
             {
