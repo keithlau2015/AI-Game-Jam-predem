@@ -31,7 +31,7 @@
 | Transition | Transition | P0, P3, P4–P7, P10, P20 | — | P0 baseline | — | 2026-08-24 | bootstrap |
 | UI/UX | UI/UX | P17, P18 | — | — | — | 2026-08-24 | bootstrap |
 | Graphics | Graphics | P0, P1–3 vis, P4–7 vis, P11–13 vis, P15–16 vis, P18 vis | — | P0 shells | — | 2026-08-24 | bootstrap |
-| Music | Music | audio cues (spawn/teleport/rescue/death/fail/cooldown/fire/invalid/clear) | — | — | — | 2026-08-24 | bootstrap |
+| Music | Music | audio cues (spawn/teleport/rescue/death/fail/cooldown/fire/invalid/clear) | — | audio cues (spawn/teleport/rescue/death/fail/cooldown/turret/invalid/clear) | — | 2026-08-24 | subagent:Music |
 
 ---
 
@@ -74,3 +74,4 @@
 ## Changelog
 - 2026-08-24 (bootstrap): docs scaffold + `Progress.md` established as singular tracker;
   `AGENTS.md` enforced as mandatory entry; per-sprint docs created under `docs/sprints/`.
+- 2026-08-24 (subagent:Music / feature/music): implemented PrototypeAudio event-driven cues; updated docs.

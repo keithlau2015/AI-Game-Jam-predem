@@ -5,12 +5,15 @@
 ```text
 ## Status
 - Last Updated: 2026-08-24
-- Updated By: bootstrap
+- Updated By: subagent:Music
 - Phases Done: —
-- Current: —
+- Current: audio cues
 - Blocked: —
 ## Changelog
 - 2026-08-24 (bootstrap): doc created; owns BGM/SFX event-driven cues.
+- 2026-08-24 (subagent:Music): implemented `Assets/Scripts/Audio/PrototypeAudio.cs` (event-driven
+  cues: spawn/teleport/rescue/death/fail/cooldown/turret/invalid/clear); subscribes to
+  GameManager events; public Play* methods for other agents.
 ```
 
 **Domain:** All sound — background music, gameplay SFX, UI/feedback cues, mixing.
